@@ -1,0 +1,23 @@
+name: Movie provider test
+
+on:
+  push:
+    branches: [ master ]
+    paths: 
+      - 'movie_info_provider/**'
+  pull_request:
+    branches: [ master ]
+    paths: 
+      - 'movie_info_provider/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./movie_info_provider
+    steps:
+    - uses: actions/checkout@v2
+    - uses: cedx/setup-dart@v2
+    - run: pub get
+    - run: pub run test
