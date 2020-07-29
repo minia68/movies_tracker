@@ -36,11 +36,5 @@ jobs:
           aws-region: us-east-2
       - name: Deploy
         run: |
-            aws lambda update-function-configuration \
-            --handler movies_load.handler \
-            --timeout 900 \
-            --runtime provided \
-            --environment {"Variables":{"RUTOR_ADDRESS":"http://rutor.info","TMDB_API_KEY":"${{ secrets.TMDB_API_KEY }}","RUTOR_SEARCH_STRING":"/search/0/1/300/2/BDRemux|BDRip|(WEB DL) 1080p|1080i","PARSE_SERVER_ADDRESS":"https://parseapi.back4app.com/","PARSE_SERVER_APP_ID":"${{ secrets.PARSE_SERVER_APP_ID }}","PARSE_SERVER_MASTER_KEY":"${{ secrets.PARSE_SERVER_MASTER_KEY }}","AWS_LAMBDA_HANDLER_NAME":"movies_load.handler"}
-            aws lambda update-function-code \
-            --function-name moviesTrackerLoad \
-            --zip-file fileb://build/lambda.zip \
+            aws lambda update-function-configuration --function-name moviesTrackerLoad --handler movies_load.handler --timeout 900 --runtime provided --environment "Variables={RUTOR_ADDRESS=http://rutor.info,TMDB_API_KEY=${{ secrets.TMDB_API_KEY }},RUTOR_SEARCH_STRING=/search/0/1/300/2/BDRemux|BDRip|(WEB DL) 1080p|1080i,PARSE_SERVER_ADDRESS=https://parseapi.back4app.com/,PARSE_SERVER_APP_ID=${{ secrets.PARSE_SERVER_APP_ID }},PARSE_SERVER_MASTER_KEY=${{ secrets.PARSE_SERVER_MASTER_KEY }},AWS_LAMBDA_HANDLER_NAME=movies_load.handler}"
+            aws lambda update-function-code --function-name moviesTrackerLoad --zip-file fileb://build/lambda.zip
