@@ -20,20 +20,12 @@ jobs:
       - uses: cedx/setup-dart@v2
       - name: Test
         run: |
-          npm install -g parse-server mongodb-runner
+          sudo npm install -g parse-server mongodb-runner
           pub get
-          sh ./script/run_tests.sh
-  build_deploy:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./lambda_server
-    steps:
-      - uses: actions/checkout@v2
-      - uses: cedx/setup-dart@v2
+          sh ./script/run_tests.sh      
       - name: Build
         run: |
-          pub get
+          mkdir build
           dart2native bin/main.dart -o build/bootstrap
           zip -j build/bootstrap build/lambda.zip
       - name: Configure AWS credentials
