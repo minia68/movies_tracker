@@ -1,0 +1,55 @@
+name: Lambda server test, build, deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ master ]
+    paths: './lambda_server/**'
+  pull_request:
+    branches: [ master ]
+    paths: './lambda_server/**'
+    
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./lambda_server
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cedx/setup-dart@v2
+      - name: Test
+        run: |
+          npm install -g parse-server mongodb-runner
+          pub get
+          sh ./script/run_tests.sh
+  build_deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./lambda_server
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cedx/setup-dart@v2
+      - name: Build
+        run: |
+          pub get
+          dart2native bin/main.dart -o build/bootstrap
+          zip -j build/bootstrap build/lambda.zip
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+      - name: Deploy
+        run: |
+            aws lambda update-function-configuration \
+            --handler movies_load.handler \
+            --timeout 900 \
+            --runtime provided \
+            --environment {"Variables":{"RUTOR_ADDRESS":"http://rutor.info","TMDB_API_KEY":"${{ secrets.TMDB_API_KEY }}","RUTOR_SEARCH_STRING":"/search/0/1/300/2/BDRemux|BDRip|(WEB DL) 1080p|1080i","PARSE_SERVER_ADDRESS":"https://parseapi.back4app.com/","PARSE_SERVER_APP_ID":"${{ secrets.PARSE_SERVER_APP_ID }}","PARSE_SERVER_MASTER_KEY":"${{ secrets.PARSE_SERVER_MASTER_KEY }}","AWS_LAMBDA_HANDLER_NAME":"movies_load.handler"}
+            aws lambda update-function-code \
+            --function-name moviesTrackerLoad \
+            --zip-file fileb://build/lambda.zip \
+            --publish true
