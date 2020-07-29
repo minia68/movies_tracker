@@ -10,7 +10,7 @@ on:
     paths: './lambda_server/**'
     
 jobs:
-  test:
+  test_build_deploy:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -27,7 +27,7 @@ jobs:
         run: |
           mkdir build
           dart2native bin/main.dart -o build/bootstrap
-          zip -j build/bootstrap build/lambda.zip
+          zip -j build/lambda.zip build/bootstrap
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -44,4 +44,3 @@ jobs:
             aws lambda update-function-code \
             --function-name moviesTrackerLoad \
             --zip-file fileb://build/lambda.zip \
-            --publish true
