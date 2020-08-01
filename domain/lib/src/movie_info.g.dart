@@ -30,6 +30,10 @@ MovieInfo _$MovieInfoFromJson(Map<String, dynamic> json) {
             ? null
             : MovieTorrentInfo.fromJson(e as Map<String, dynamic>))
         ?.toList(),
+    youtubeTrailerKey: json['youtubeTrailerKey'] as String,
+    credits: json['credits'] == null
+        ? null
+        : MovieCredits.fromJson(json['credits'] as Map<String, dynamic>),
   );
 }
 
@@ -59,5 +63,7 @@ Map<String, dynamic> _$MovieInfoToJson(MovieInfo instance) {
   writeNotNull('tmdbVoteAverage', instance.tmdbVoteAverage);
   writeNotNull(
       'torrentsInfo', instance.torrentsInfo?.map((e) => e?.toJson())?.toList());
+  writeNotNull('youtubeTrailerKey', instance.youtubeTrailerKey);
+  writeNotNull('credits', instance.credits?.toJson());
   return val;
 }

@@ -1,3 +1,4 @@
+import 'package:domain/src/movie_credits.dart';
 import 'package:domain/src/movie_torrent_info.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:meta/meta.dart';
@@ -23,6 +24,7 @@ class MovieInfo {
   final double tmdbVoteAverage;
   final List<MovieTorrentInfo> torrentsInfo;
   final String youtubeTrailerKey;
+  final MovieCredits credits;
 
   MovieInfo({
     this.tmdbId,
@@ -42,6 +44,7 @@ class MovieInfo {
     this.tmdbVoteAverage,
     @required this.torrentsInfo,
     this.youtubeTrailerKey,
+    this.credits,
   });
 
   @override
