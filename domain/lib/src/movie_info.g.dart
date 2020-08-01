@@ -31,9 +31,18 @@ MovieInfo _$MovieInfoFromJson(Map<String, dynamic> json) {
             : MovieTorrentInfo.fromJson(e as Map<String, dynamic>))
         ?.toList(),
     youtubeTrailerKey: json['youtubeTrailerKey'] as String,
-    credits: json['credits'] == null
-        ? null
-        : MovieCredits.fromJson(json['credits'] as Map<String, dynamic>),
+    cast: (json['cast'] as List)
+        ?.map((e) =>
+            e == null ? null : MovieCast.fromJson(e as Map<String, dynamic>))
+        ?.toList(),
+    crew: (json['crew'] as List)
+        ?.map((e) =>
+            e == null ? null : MovieCrew.fromJson(e as Map<String, dynamic>))
+        ?.toList(),
+    productionCountries: (json['productionCountries'] as List)
+        ?.map((e) => e as String)
+        ?.toList(),
+    genres: (json['genres'] as List)?.map((e) => e as String)?.toList(),
   );
 }
 
@@ -64,6 +73,9 @@ Map<String, dynamic> _$MovieInfoToJson(MovieInfo instance) {
   writeNotNull(
       'torrentsInfo', instance.torrentsInfo?.map((e) => e?.toJson())?.toList());
   writeNotNull('youtubeTrailerKey', instance.youtubeTrailerKey);
-  writeNotNull('credits', instance.credits?.toJson());
+  writeNotNull('crew', instance.crew?.map((e) => e?.toJson())?.toList());
+  writeNotNull('cast', instance.cast?.map((e) => e?.toJson())?.toList());
+  writeNotNull('genres', instance.genres);
+  writeNotNull('productionCountries', instance.productionCountries);
   return val;
 }

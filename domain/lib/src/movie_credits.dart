@@ -3,18 +3,6 @@ import 'package:json_annotation/json_annotation.dart';
 part 'movie_credits.g.dart';
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false)
-class MovieCredits {
-  final List<MovieCast> cast;
-  final List<MovieCrew> crew;
-
-  MovieCredits({this.cast, this.crew});
-
-  Map<String, dynamic> toJson() => _$MovieCreditsToJson(this);
-  factory MovieCredits.fromJson(Map<String, dynamic> json) =>
-      _$MovieCreditsFromJson(json);
-}
-
-@JsonSerializable(explicitToJson: true, includeIfNull: false)
 class MovieCrew {
   final String job;
   final String name;

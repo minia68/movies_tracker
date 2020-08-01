@@ -24,7 +24,10 @@ class MovieInfo {
   final double tmdbVoteAverage;
   final List<MovieTorrentInfo> torrentsInfo;
   final String youtubeTrailerKey;
-  final MovieCredits credits;
+  final List<MovieCrew> crew;
+  final List<MovieCast> cast;
+  final List<String> genres;
+  final List<String> productionCountries;
 
   MovieInfo({
     this.tmdbId,
@@ -44,7 +47,10 @@ class MovieInfo {
     this.tmdbVoteAverage,
     @required this.torrentsInfo,
     this.youtubeTrailerKey,
-    this.credits,
+    this.cast,
+    this.crew,
+    this.productionCountries,
+    this.genres,
   });
 
   @override
