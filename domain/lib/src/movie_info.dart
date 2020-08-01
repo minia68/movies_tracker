@@ -6,7 +6,7 @@ part 'movie_info.g.dart';
 
 @JsonSerializable(explicitToJson: true, includeIfNull: false)
 class MovieInfo {
-  final String tmdbId;
+  final int tmdbId;
   final String imdbId;
   final double imdbVoteAverage;
   final int imdbVoteCount;
@@ -22,24 +22,27 @@ class MovieInfo {
   final int tmdbVoteCount;
   final double tmdbVoteAverage;
   final List<MovieTorrentInfo> torrentsInfo;
+  final String youtubeTrailerKey;
 
-  MovieInfo(
-      {@required this.tmdbId,
-      @required this.imdbId,
-      @required this.imdbVoteAverage,
-      @required this.imdbVoteCount,
-      @required this.kinopoiskId,
-      @required this.kinopoiskVoteAverage,
-      @required this.kinopoiskVoteCount,
-      @required this.posterPath,
-      @required this.overview,
-      @required this.releaseDate,
-      @required this.title,
-      @required this.backdropPath,
-      @required this.tmdbPopularity,
-      @required this.tmdbVoteCount,
-      @required this.tmdbVoteAverage,
-      @required this.torrentsInfo});
+  MovieInfo({
+    this.tmdbId,
+    @required this.imdbId,
+    this.imdbVoteAverage,
+    this.imdbVoteCount,
+    this.kinopoiskId,
+    this.kinopoiskVoteAverage,
+    this.kinopoiskVoteCount,
+    this.posterPath,
+    @required this.overview,
+    this.releaseDate,
+    @required this.title,
+    this.backdropPath,
+    this.tmdbPopularity,
+    this.tmdbVoteCount,
+    this.tmdbVoteAverage,
+    @required this.torrentsInfo,
+    this.youtubeTrailerKey,
+  });
 
   @override
   bool operator ==(Object other) =>

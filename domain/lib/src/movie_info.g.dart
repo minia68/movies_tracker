@@ -8,7 +8,7 @@ part of 'movie_info.dart';
 
 MovieInfo _$MovieInfoFromJson(Map<String, dynamic> json) {
   return MovieInfo(
-    tmdbId: json['tmdbId'] as String,
+    tmdbId: json['tmdbId'] as int,
     imdbId: json['imdbId'] as String,
     imdbVoteAverage: (json['imdbVoteAverage'] as num)?.toDouble(),
     imdbVoteCount: json['imdbVoteCount'] as int,

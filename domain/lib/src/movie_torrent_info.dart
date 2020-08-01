@@ -11,12 +11,13 @@ class MovieTorrentInfo {
   final int seeders;
   final int leechers;
 
-  MovieTorrentInfo(
-      {@required this.magnetUrl,
-      @required this.title,
-      @required this.size,
-      @required this.seeders,
-      @required this.leechers});
+  MovieTorrentInfo({
+    @required this.magnetUrl,
+    @required this.title,
+    @required this.size,
+    @required this.seeders,
+    @required this.leechers,
+  });
 
   @override
   bool operator ==(Object other) =>
