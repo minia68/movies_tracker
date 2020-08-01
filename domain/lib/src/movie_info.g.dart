@@ -10,11 +10,7 @@ MovieInfo _$MovieInfoFromJson(Map<String, dynamic> json) {
   return MovieInfo(
     tmdbId: json['tmdbId'] as int,
     imdbId: json['imdbId'] as String,
-    imdbVoteAverage: (json['imdbVoteAverage'] as num)?.toDouble(),
-    imdbVoteCount: json['imdbVoteCount'] as int,
     kinopoiskId: json['kinopoiskId'] as String,
-    kinopoiskVoteAverage: (json['kinopoiskVoteAverage'] as num)?.toDouble(),
-    kinopoiskVoteCount: json['kinopoiskVoteCount'] as int,
     posterPath: json['posterPath'] as String,
     overview: json['overview'] as String,
     releaseDate: json['releaseDate'] == null
@@ -25,6 +21,9 @@ MovieInfo _$MovieInfoFromJson(Map<String, dynamic> json) {
     tmdbPopularity: (json['tmdbPopularity'] as num)?.toDouble(),
     tmdbVoteCount: json['tmdbVoteCount'] as int,
     tmdbVoteAverage: (json['tmdbVoteAverage'] as num)?.toDouble(),
+    raiting: json['raiting'] == null
+        ? null
+        : MovieRaiting.fromJson(json['raiting'] as Map<String, dynamic>),
     torrentsInfo: (json['torrentsInfo'] as List)
         ?.map((e) => e == null
             ? null
@@ -57,11 +56,7 @@ Map<String, dynamic> _$MovieInfoToJson(MovieInfo instance) {
 
   writeNotNull('tmdbId', instance.tmdbId);
   writeNotNull('imdbId', instance.imdbId);
-  writeNotNull('imdbVoteAverage', instance.imdbVoteAverage);
-  writeNotNull('imdbVoteCount', instance.imdbVoteCount);
   writeNotNull('kinopoiskId', instance.kinopoiskId);
-  writeNotNull('kinopoiskVoteAverage', instance.kinopoiskVoteAverage);
-  writeNotNull('kinopoiskVoteCount', instance.kinopoiskVoteCount);
   writeNotNull('posterPath', instance.posterPath);
   writeNotNull('overview', instance.overview);
   writeNotNull('releaseDate', instance.releaseDate?.toIso8601String());
@@ -70,6 +65,7 @@ Map<String, dynamic> _$MovieInfoToJson(MovieInfo instance) {
   writeNotNull('tmdbPopularity', instance.tmdbPopularity);
   writeNotNull('tmdbVoteCount', instance.tmdbVoteCount);
   writeNotNull('tmdbVoteAverage', instance.tmdbVoteAverage);
+  writeNotNull('raiting', instance.raiting?.toJson());
   writeNotNull(
       'torrentsInfo', instance.torrentsInfo?.map((e) => e?.toJson())?.toList());
   writeNotNull('youtubeTrailerKey', instance.youtubeTrailerKey);
@@ -77,5 +73,30 @@ Map<String, dynamic> _$MovieInfoToJson(MovieInfo instance) {
   writeNotNull('cast', instance.cast?.map((e) => e?.toJson())?.toList());
   writeNotNull('genres', instance.genres);
   writeNotNull('productionCountries', instance.productionCountries);
+  return val;
+}
+
+MovieRaiting _$MovieRaitingFromJson(Map<String, dynamic> json) {
+  return MovieRaiting(
+    imdbVoteAverage: (json['imdbVoteAverage'] as num)?.toDouble(),
+    imdbVoteCount: json['imdbVoteCount'] as int,
+    kinopoiskVoteAverage: (json['kinopoiskVoteAverage'] as num)?.toDouble(),
+    kinopoiskVoteCount: json['kinopoiskVoteCount'] as int,
+  );
+}
+
+Map<String, dynamic> _$MovieRaitingToJson(MovieRaiting instance) {
+  final val = <String, dynamic>{};
+
+  void writeNotNull(String key, dynamic value) {
+    if (value != null) {
+      val[key] = value;
+    }
+  }
+
+  writeNotNull('imdbVoteAverage', instance.imdbVoteAverage);
+  writeNotNull('imdbVoteCount', instance.imdbVoteCount);
+  writeNotNull('kinopoiskVoteAverage', instance.kinopoiskVoteAverage);
+  writeNotNull('kinopoiskVoteCount', instance.kinopoiskVoteCount);
   return val;
 }

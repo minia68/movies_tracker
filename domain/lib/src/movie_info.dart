@@ -9,11 +9,7 @@ part 'movie_info.g.dart';
 class MovieInfo {
   final int tmdbId;
   final String imdbId;
-  final double imdbVoteAverage;
-  final int imdbVoteCount;
   final String kinopoiskId;
-  final double kinopoiskVoteAverage;
-  final int kinopoiskVoteCount;
   final String posterPath;
   final String overview;
   final DateTime releaseDate;
@@ -22,6 +18,7 @@ class MovieInfo {
   final double tmdbPopularity;
   final int tmdbVoteCount;
   final double tmdbVoteAverage;
+  final MovieRaiting raiting;
   final List<MovieTorrentInfo> torrentsInfo;
   final String youtubeTrailerKey;
   final List<MovieCrew> crew;
@@ -32,11 +29,7 @@ class MovieInfo {
   MovieInfo({
     this.tmdbId,
     @required this.imdbId,
-    this.imdbVoteAverage,
-    this.imdbVoteCount,
     this.kinopoiskId,
-    this.kinopoiskVoteAverage,
-    this.kinopoiskVoteCount,
     this.posterPath,
     @required this.overview,
     this.releaseDate,
@@ -45,6 +38,7 @@ class MovieInfo {
     this.tmdbPopularity,
     this.tmdbVoteCount,
     this.tmdbVoteAverage,
+    this.raiting,
     @required this.torrentsInfo,
     this.youtubeTrailerKey,
     this.cast,
@@ -67,4 +61,22 @@ class MovieInfo {
   Map<String, dynamic> toJson() => _$MovieInfoToJson(this);
   factory MovieInfo.fromJson(Map<String, dynamic> json) =>
       _$MovieInfoFromJson(json);
+}
+
+@JsonSerializable(explicitToJson: true, includeIfNull: false)
+class MovieRaiting {
+  final double imdbVoteAverage;
+  final int imdbVoteCount;
+  final double kinopoiskVoteAverage;
+  final int kinopoiskVoteCount;
+
+  MovieRaiting({
+    this.imdbVoteAverage,
+    this.imdbVoteCount,
+    this.kinopoiskVoteAverage,
+    this.kinopoiskVoteCount,
+  });
+  Map<String, dynamic> toJson() => _$MovieRaitingToJson(this);
+  factory MovieRaiting.fromJson(Map<String, dynamic> json) =>
+      _$MovieRaitingFromJson(json);
 }
