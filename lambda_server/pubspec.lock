@@ -105,7 +105,7 @@ packages:
       path: "../domain"
       relative: true
     source: path
-    version: "1.0.0"
+    version: "1.0.1"
   glob:
     dependency: transitive
     description:
@@ -196,7 +196,7 @@ packages:
       path: "../movie_info_provider"
       relative: true
     source: path
-    version: "1.0.0"
+    version: "1.0.1"
   node_interop:
     dependency: transitive
     description:
