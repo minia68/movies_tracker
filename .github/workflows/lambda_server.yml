@@ -4,10 +4,12 @@ on:
   workflow_dispatch:
   push:
     branches: [ master ]
-    paths: './lambda_server/**'
+    paths-ignore: 
+      - 'client/**'
   pull_request:
     branches: [ master ]
-    paths: './lambda_server/**'
+    paths-ignore: 
+      - 'client/**'
     
 jobs:
   test_build_deploy:
