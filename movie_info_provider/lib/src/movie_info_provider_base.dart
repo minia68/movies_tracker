@@ -33,6 +33,7 @@ class MovieInfoProvider {
     _logger.fine('load ${searchResults.length} search results');
 
     final newIds = <String>[];
+    final ratingUpdated = <String, List<String>>{};
 
     for (var searchResult in searchResults) {
       _logger.fine('start loading tracker detail ${searchResult.detailUrl}');
@@ -45,72 +46,118 @@ class MovieInfoProvider {
       }
 
       newIds.add(detailResult.imdbId);
-      final torrentsInfo = existing
-          .firstWhere((movieInfo) => movieInfo.imdbId == detailResult.imdbId,
-              orElse: () => null)
-          ?.torrentsInfo;
-      if (torrentsInfo != null) {
-        _logger.fine('find existing imdbId ${detailResult.imdbId}');
-        final torrentsInfoIdx = torrentsInfo.indexWhere(
-            (torrentsInfo) => torrentsInfo.magnetUrl == detailResult.magnetUrl);
-        final movieTorrentInfo =
-            _toMovieTorrentInfo(searchResult, detailResult);
-        if (torrentsInfoIdx == -1) {
-          _logger.fine('add torrentsInfo ${detailResult.imdbId}');
-          torrentsInfo.add(movieTorrentInfo);
-        } else {
-          _logger.fine('find existing torrentsInfo ${detailResult.magnetUrl}');
-          torrentsInfo[torrentsInfoIdx] = movieTorrentInfo;
-        }
+      final movieInfo = existing.firstWhere(
+          (movieInfo) => movieInfo.imdbId == detailResult.imdbId,
+          orElse: () => null);
+      if (movieInfo != null) {
+        await _update(searchResult, detailResult, movieInfo, ratingUpdated);
       } else {
-        Rating rating;
-        try {
-          _logger.fine('start loading rating ${detailResult.kinopoiskId}');
-          rating = await _ratingDataSource.getRating(detailResult.kinopoiskId);
-        } catch (e, s) {
-          _logger.warning('error get rating ${detailResult.imdbId}', e, s);
-          rating = Rating(
-              imdbVoteAverage: 0,
-              imdbVoteCount: 0,
-              kinopoiskVoteAverage: 0,
-              kinopoiskVoteCount: 0);
+        final newMovieInfo =
+            await _create(searchResult, detailResult, ratingUpdated);
+        if (newMovieInfo != null) {
+          existing.add(newMovieInfo);
         }
-
-        MdbMovieInfo movieInfo;
-        try {
-          _logger.fine('start loading mdb info ${detailResult.imdbId}');
-          movieInfo = await _mdbDataSource.getMovieInfo(detailResult.imdbId);
-        } catch (e, s) {
-          _logger.warning('error get mdb info ${detailResult.imdbId}', e, s);
-        }
-        if (movieInfo == null) {
-          continue;
-        }
-
-        existing.add(MovieInfo(
-          tmdbId: movieInfo.id,
-          imdbId: detailResult.imdbId,
-          imdbVoteAverage: rating.imdbVoteAverage,
-          imdbVoteCount: rating.imdbVoteCount,
-          kinopoiskId: detailResult.kinopoiskId,
-          kinopoiskVoteAverage: rating.kinopoiskVoteAverage,
-          kinopoiskVoteCount: rating.kinopoiskVoteCount,
-          posterPath: movieInfo.posterPath,
-          overview: movieInfo.overview,
-          releaseDate: movieInfo.releaseDate,
-          title: movieInfo.title,
-          backdropPath: movieInfo.backdropPath,
-          tmdbPopularity: movieInfo.popularity,
-          tmdbVoteCount: movieInfo.voteCount,
-          tmdbVoteAverage: movieInfo.voteAverage,
-          torrentsInfo: [_toMovieTorrentInfo(searchResult, detailResult)],
-        ));
       }
     }
     return existing
         .where(
             (movieInfo) => newIds.any((imdbId) => imdbId == movieInfo.imdbId))
         .toList();
+  }
+
+  Future _update(
+    SearchResult searchResult,
+    DetailResult detailResult,
+    MovieInfo movieInfo,
+    Map<String, List<String>> raitingUpdated,
+  ) async {
+    _logger.fine('find existing imdbId ${detailResult.imdbId}');
+    final torrentsInfo = movieInfo.torrentsInfo ??= [];
+
+    if (!raitingUpdated.containsKey(detailResult.imdbId)) {
+      _logger.fine('get raiting ${detailResult.imdbId}');
+      final rating = await _getRating(detailResult);
+      movieInfo.raiting = MovieRaiting(
+        imdbVoteAverage: rating.imdbVoteAverage,
+        imdbVoteCount: rating.imdbVoteCount,
+        kinopoiskVoteAverage: rating.kinopoiskVoteAverage,
+        kinopoiskVoteCount: rating.kinopoiskVoteCount,
+      );
+      raitingUpdated[detailResult.imdbId] = [detailResult.magnetUrl];
+      torrentsInfo.clear();
+    } else {
+      raitingUpdated[detailResult.imdbId].add(detailResult.magnetUrl);
+    }
+
+    final torrentsInfoIdx = torrentsInfo.indexWhere(
+        (torrentsInfo) => torrentsInfo.magnetUrl == detailResult.magnetUrl);
+    final movieTorrentInfo = _toMovieTorrentInfo(searchResult, detailResult);
+    if (torrentsInfoIdx == -1) {
+      _logger.fine('add torrentsInfo ${detailResult.imdbId}');
+      torrentsInfo.add(movieTorrentInfo);
+    } else {
+      _logger.fine('find existing torrentsInfo ${detailResult.magnetUrl}');
+      torrentsInfo[torrentsInfoIdx] = movieTorrentInfo;
+    }
+  }
+
+  Future<MovieInfo> _create(
+    SearchResult searchResult,
+    DetailResult detailResult,
+    Map<String, List<String>> raitingUpdated,
+  ) async {
+    raitingUpdated[detailResult.imdbId] = [detailResult.magnetUrl];
+    final rating = await _getRating(detailResult);
+
+    MdbMovieInfo movieInfo;
+    try {
+      _logger.fine('start loading mdb info ${detailResult.imdbId}');
+      movieInfo = await _mdbDataSource.getMovieInfo(detailResult.imdbId);
+    } catch (e, s) {
+      _logger.warning('error get mdb info ${detailResult.imdbId}', e, s);
+    }
+    if (movieInfo == null) {
+      return null;
+    }
+
+    return MovieInfo(
+      tmdbId: int.parse(movieInfo.id),
+      imdbId: detailResult.imdbId,
+      raiting: MovieRaiting(
+        imdbVoteAverage: rating.imdbVoteAverage,
+        imdbVoteCount: rating.imdbVoteCount,
+        kinopoiskVoteAverage: rating.kinopoiskVoteAverage,
+        kinopoiskVoteCount: rating.kinopoiskVoteCount,
+      ),
+      kinopoiskId: detailResult.kinopoiskId,
+      posterPath: movieInfo.posterPath,
+      overview: movieInfo.overview,
+      releaseDate: movieInfo.releaseDate,
+      title: movieInfo.title,
+      backdropPath: movieInfo.backdropPath,
+      tmdbPopularity: movieInfo.popularity,
+      tmdbVoteCount: movieInfo.voteCount,
+      tmdbVoteAverage: movieInfo.voteAverage,
+      torrentsInfo: [_toMovieTorrentInfo(searchResult, detailResult)],
+      youtubeTrailerKey: movieInfo.youtubeTrailerKey,
+      genres: movieInfo.genres,
+      productionCountries:
+          movieInfo.productionCountries?.map((e) => e.name)?.toList(),
+      cast: movieInfo.cast
+          ?.map((e) => MovieCast(
+                character: e.character,
+                name: e.name,
+                profilePath: e.posterPath,
+              ))
+          ?.toList(),
+      crew: movieInfo.crew
+          ?.map((e) => MovieCrew(
+                job: e.job,
+                name: e.name,
+                profilePath: e.posterPath,
+              ))
+          ?.toList(),
+    );
   }
 
   MovieTorrentInfo _toMovieTorrentInfo(
@@ -121,5 +168,21 @@ class MovieInfoProvider {
         size: detailResult.size,
         seeders: detailResult.seeders,
         leechers: detailResult.leechers);
+  }
+
+  Future<Rating> _getRating(DetailResult detailResult) async {
+    Rating rating;
+    try {
+      _logger.fine('start loading rating ${detailResult.kinopoiskId}');
+      rating = await _ratingDataSource.getRating(detailResult.kinopoiskId);
+    } catch (e, s) {
+      _logger.warning('error get rating ${detailResult.imdbId}', e, s);
+      rating = Rating(
+          imdbVoteAverage: 0,
+          imdbVoteCount: 0,
+          kinopoiskVoteAverage: 0,
+          kinopoiskVoteCount: 0);
+    }
+    return rating;
   }
 }

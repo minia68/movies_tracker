@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 
 import 'configuration_response.dart';
 import 'find_response.dart';
+import 'movie_response.dart';
 
 part 'client.g.dart';
 
@@ -20,12 +21,19 @@ abstract class TmdbClient {
   @GET('/configuration')
   Future<ConfigurationResponse> configuration();
 
+  @GET('/movie/{movieId}')
+  Future<Movie> getMovie(
+    @Path() int movieId,
+    @Query('language') String language, {
+    @Query('append_to_response') String appendToResponse = 'credits,videos',
+  });
+
   static TmdbClient setup(String apiKey) {
     final dio = Dio();
     dio.options.headers['Content-Type'] = 'application/json';
     dio.interceptors
-      ..add(
-          LogInterceptor(responseBody: true, logPrint: (obj) => _logger.config(obj)))
+      ..add(LogInterceptor(
+          responseBody: true, logPrint: (obj) => _logger.config(obj)))
       ..add(ApiKeyInterceptor(apiKey));
     return _TmdbClient(dio);
   }

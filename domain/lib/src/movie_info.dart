@@ -18,8 +18,8 @@ class MovieInfo {
   final double tmdbPopularity;
   final int tmdbVoteCount;
   final double tmdbVoteAverage;
-  final MovieRaiting raiting;
-  final List<MovieTorrentInfo> torrentsInfo;
+  MovieRaiting raiting;
+  List<MovieTorrentInfo> torrentsInfo;
   final String youtubeTrailerKey;
   final List<MovieCrew> crew;
   final List<MovieCast> cast;

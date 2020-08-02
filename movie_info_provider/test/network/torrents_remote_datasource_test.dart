@@ -24,8 +24,8 @@ void main() {
     trackerDataSource = MockTrackerDataSource();
     ratingDataSource = MockRatingDataSource();
     mdbDataSource = MockMdbDataSource();
-    ds = MovieInfoProvider(trackerDataSource, ratingDataSource,
-        mdbDataSource, trackerSearchUrl);
+    ds = MovieInfoProvider(
+        trackerDataSource, ratingDataSource, mdbDataSource, trackerSearchUrl);
   });
 
   test('loadTopSeedersFhdMovies', () async {
@@ -36,20 +36,26 @@ void main() {
           SearchResult('detailUrl3'),
         ]);
 
-    when(trackerDataSource.getDetail(SearchResult('detailUrl'))).thenAnswer(
-        (_) async => DetailResult(
-            imdbId: 'imdbId',
-            kinopoiskId: 'kinopoiskId',
-            leechers: 1,
-            magnetUrl: 'magnetUrl',
-            seeders: 2,
-            size: 3,
-            title: 'title'));
+    when(trackerDataSource.getDetail(SearchResult('detailUrl')))
+        .thenAnswer((_) async => DetailResult(
+              imdbId: 'imdbId',
+              kinopoiskId: 'kinopoiskId',
+              leechers: 1,
+              magnetUrl: 'magnetUrl',
+              seeders: 2,
+              size: 3,
+              title: 'title',
+            ));
     when(trackerDataSource.getDetail(SearchResult('detailUrl1')))
         // ignore: missing_required_param
         .thenAnswer((_) async => DetailResult(
               imdbId: 'imdbId1',
               kinopoiskId: 'kinopoiskId1',
+              leechers: 1,
+              magnetUrl: 'magnetUrl11',
+              seeders: 2,
+              size: 3,
+              title: 'title',
             ));
     when(trackerDataSource.getDetail(SearchResult('detailUrl2')))
         .thenAnswer((_) async => DetailResult(
@@ -61,8 +67,8 @@ void main() {
               size: 31,
               title: 'title1',
             ));
-    when(trackerDataSource.getDetail(SearchResult('detailUrl3'))).thenAnswer(
-        (_) async => throw SearchParserException('test'));
+    when(trackerDataSource.getDetail(SearchResult('detailUrl3')))
+        .thenAnswer((_) async => throw SearchParserException('test'));
 
     when(ratingDataSource.getRating(any)).thenAnswer((_) async => Rating(
           imdbVoteAverage: 1,
@@ -82,6 +88,31 @@ void main() {
               popularity: 6,
               voteAverage: 7,
               voteCount: 8,
+              cast: [
+                MdbMovieCast(
+                  character: 'character1',
+                  name: 'name1',
+                  posterPath: 'profilePath1',
+                ),
+                MdbMovieCast(
+                  character: 'character2',
+                  name: 'name2',
+                  posterPath: 'profilePath2',
+                ),
+              ],
+              crew: [
+                MdbMovieCrew(
+                  job: 'job1',
+                  name: 'name1',
+                  posterPath: 'profilePath1',
+                ),
+              ],
+              genres: ['genres1', 'genres2'],
+              productionCountries: [
+                MdbMovieCountry(name: 'productionCountries1'),
+                MdbMovieCountry(name: 'productionCountries2'),
+              ],
+              youtubeTrailerKey: 'youtubeTrailerKey1',
             ));
     when(mdbDataSource.getMovieInfo('imdbId1'))
         // ignore: missing_required_param
@@ -102,13 +133,45 @@ void main() {
             leechers: 12,
           ),
         ],
+      ),
+      // ignore: missing_required_param
+      MovieInfo(
+        imdbId: 'imdbId1',
+        kinopoiskId: 'kinopoiskId1',
+        torrentsInfo: [
+          MovieTorrentInfo(
+            magnetUrl: 'magnetUrl11',
+            seeders: 22,
+            size: 32,
+            title: 'title2',
+            leechers: 12,
+          ),
+          MovieTorrentInfo(
+            magnetUrl: 'magnetUrl111',
+            seeders: 22,
+            size: 32,
+            title: 'title2',
+            leechers: 12,
+          ),
+        ],
       )
     ]);
     expect(response.length, 2);
-    testMovieInfo(response[0], movieInfo);
+    //testMovieInfo(response[0], movieInfo);
+    expect(response[1].toJson(), movieInfo.toJson());
 
-    expect(response[1].imdbId, 'imdbId1');
-    expect(response[1].kinopoiskId, 'kinopoiskId1');
+    final mi = response[0];
+    expect(mi.imdbId, 'imdbId1');
+    expect(mi.kinopoiskId, 'kinopoiskId1');
+    expect(mi.torrentsInfo.length, 1);
+    final ti = mi.torrentsInfo[0];
+    expect(ti.magnetUrl, 'magnetUrl11');
+    expect(ti.seeders, 2);
+    expect(ti.size, 3);
+    expect(ti.title, 'title');
+    expect(ti.leechers, 1);
+
+    verify(ratingDataSource.getRating(any)).called(2);
   });
 }
 

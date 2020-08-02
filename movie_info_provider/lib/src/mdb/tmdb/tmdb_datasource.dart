@@ -17,21 +17,55 @@ class TmdbDataSource implements MdbDataSource {
 
   @override
   Future<MdbMovieInfo> getMovieInfo(String id) async {
-    final response = await _client.find(id, _language, 'imdb_id');
-    if (response.movieResults.length != 1) {
+    final findResponse = await _client.find(id, _language, 'imdb_id');
+    if (findResponse.movieResults.length != 1) {
       return null;
     }
-    final movieResult = response.movieResults[0];
+    final movieResult = findResponse.movieResults[0];
+
+    final movie = await _client.getMovie(movieResult.id, _language);
+
+    final video = movie.videos?.results?.firstWhere(
+            (e) => e.type == 'Trailer' && e.site == 'YouTube',
+            orElse: () => null) ??
+        movie.videos?.results?.firstWhere(
+            (e) => e.type == 'Teaser' && e.site == 'YouTube',
+            orElse: () => null);
+
     return MdbMovieInfo(
       id: movieResult.id.toString(),
       posterPath: movieResult.posterPath,
       overview: movieResult.overview,
-      releaseDate: DateTime.parse(movieResult.releaseDate),
+      releaseDate: movieResult.releaseDate != null
+          ? DateTime.parse(movieResult.releaseDate)
+          : null,
       title: movieResult.title,
       backdropPath: movieResult.backdropPath,
       popularity: movieResult.popularity,
       voteAverage: movieResult.voteAverage,
       voteCount: movieResult.voteCount,
+      cast: movie.credits?.cast
+          ?.map((e) => MdbMovieCast(
+                character: e.character,
+                name: e.name,
+                posterPath: e.profilePath,
+              ))
+          ?.toList(),
+      crew: movie.credits?.crew
+          ?.map((e) => MdbMovieCrew(
+                job: e.job,
+                name: e.name,
+                posterPath: e.profilePath,
+              ))
+          ?.toList(),
+      genres: movie.genres?.map((e) => e.name)?.toList(),
+      productionCountries: movie.productionCountries
+          ?.map((e) => MdbMovieCountry(
+                code: e.code,
+                name: e.name,
+              ))
+          ?.toList(),
+      youtubeTrailerKey: video?.key,
     );
   }
 }

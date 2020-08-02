@@ -23,8 +23,8 @@ class _TmdbClient implements TmdbClient {
     ArgumentError.checkNotNull(externalSource, 'externalSource');
     const _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
-      'language': language,
-      'external_source': externalSource
+      r'language': language,
+      r'external_source': externalSource
     };
     final _data = <String, dynamic>{};
     final Response<Map<String, dynamic>> _result = await _dio.request(
@@ -37,7 +37,7 @@ class _TmdbClient implements TmdbClient {
             baseUrl: baseUrl),
         data: _data);
     final value = FindResponse.fromJson(_result.data);
-    return Future.value(value);
+    return value;
   }
 
   @override
@@ -55,6 +55,30 @@ class _TmdbClient implements TmdbClient {
             baseUrl: baseUrl),
         data: _data);
     final value = ConfigurationResponse.fromJson(_result.data);
-    return Future.value(value);
+    return value;
+  }
+
+  @override
+  getMovie(movieId, language, {appendToResponse = 'credits,videos'}) async {
+    ArgumentError.checkNotNull(movieId, 'movieId');
+    ArgumentError.checkNotNull(language, 'language');
+    const _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'language': language,
+      r'append_to_response': appendToResponse
+    };
+    queryParameters.removeWhere((k, v) => v == null);
+    final _data = <String, dynamic>{};
+    final Response<Map<String, dynamic>> _result = await _dio.request(
+        '/movie/$movieId',
+        queryParameters: queryParameters,
+        options: RequestOptions(
+            method: 'GET',
+            headers: <String, dynamic>{},
+            extra: _extra,
+            baseUrl: baseUrl),
+        data: _data);
+    final value = Movie.fromJson(_result.data);
+    return value;
   }
 }
