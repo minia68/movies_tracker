@@ -1,0 +1,11 @@
+CREATE TABLE programs (
+    id TEXT NOT NULL PRIMARY KEY,
+    externalId TEXT,
+    channelExternalId TEXT,
+    isDeleted BOOLEAN
+);
+CREATE TABLE configs (
+    id INT NOT NULL PRIMARY KEY,
+    moviesInfo TEXT,
+    imageBasePath TEXT
+);

@@ -1,0 +1,48 @@
+name: atv_client
+description: android tv client
+
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.7.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^0.1.3
+
+  domain:
+    path: ../domain
+  movie_info_provider:
+    path: ../movie_info_provider
+
+  rxdart: ^0.24.1
+  url_launcher: ^5.5.0
+  cached_network_image: ^2.2.0+1
+  android_intent: ^0.3.7+2
+  scrollable_positioned_list: ^0.1.7
+
+  moor: ^3.3.1
+  sqlite3_flutter_libs: ^0.2.0
+  path_provider: ^1.6.11
+  path: ^1.7.0
+  dio: ^3.0.10
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  mockito: ^4.1.1
+
+  moor_generator: ^3.3.1
+  build_runner: ^1.10.1
+
+flutter:
+
+  uses-material-design: true
+
+  assets:
+    - assets/
