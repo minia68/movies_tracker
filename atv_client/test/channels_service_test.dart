@@ -1,4 +1,5 @@
-import 'package:atv_client/data/cnannels_service.dart';
+import 'package:atv_client/data/channels_service.dart';
+import 'package:atv_client/data/data_sources.dart';
 import 'package:atv_client/model/channel.dart';
 import 'package:atv_client/model/program.dart';
 import 'package:domain/domain.dart';
@@ -13,30 +14,37 @@ void main() {
         ChannelsService(programLocalDataSource, programTvDataSource);
 
     when(programTvDataSource.getChannels()).thenAnswer((_) async => []);
-    when(programTvDataSource.createChannel(any))
-        .thenAnswer((_) async => 'channelId');
+    when(programTvDataSource.createChannel(any)).thenAnswer((_) async => 1);
     when(programLocalDataSource.getPrograms()).thenAnswer((_) async => [
           Program(
-            id: 'id1',
+            id: 1,
             externalId: 'externalId1',
             channelExternalId: ChannelsService.moviesChannelId,
             isDeleted: false,
           ),
           Program(
-            id: 'id11',
+            id: 11,
             externalId: 'externalId11',
             channelExternalId: ChannelsService.moviesChannelId,
             isDeleted: false,
           ),
           Program(
-            id: 'id111',
+            id: 111,
             externalId: 'externalId111',
             channelExternalId: ChannelsService.moviesChannelId,
             isDeleted: true,
           ),
+          Program(
+            id: 222,
+            externalId: 'externalId222',
+            channelExternalId: ChannelsService.moviesChannelId,
+            isDeleted: false,
+          ),
         ]);
+    when(programTvDataSource.getProgramsIds(any))
+        .thenAnswer((_) async => [1, 11, 111]);
     when(programTvDataSource.createProgram(any, any))
-        .thenAnswer((_) async => 'id1111');
+        .thenAnswer((_) async => 1111);
     when(programLocalDataSource.createProgram(any))
         .thenAnswer((_) async => null);
     when(programTvDataSource.updateProgram(any, any, any))
@@ -49,15 +57,16 @@ void main() {
       MovieInfo(imdbId: 'externalId1'),
       MovieInfo(imdbId: 'externalId2'),
       MovieInfo(imdbId: 'externalId111'),
+      MovieInfo(imdbId: 'externalId222'),
     ]);
 
     expect(
         verify(programTvDataSource.createProgram(captureAny, captureAny))
             .captured,
-        ['channelId', MovieInfo(imdbId: 'externalId2')]);
+        [1, MovieInfo(imdbId: 'externalId2')]);
     expect(verify(programLocalDataSource.createProgram(captureAny)).captured, [
       Program(
-        id: 'id1111',
+        id: 1111,
         channelExternalId: ChannelsService.moviesChannelId,
         externalId: 'externalId2',
       )
@@ -66,37 +75,45 @@ void main() {
         verify(programTvDataSource.updateProgram(
                 captureAny, captureAny, captureAny))
             .captured,
-        ['channelId', 'id1', MovieInfo(imdbId: 'externalId1')]);
-    expect(verify(programTvDataSource.deleteProgram(captureAny)).captured,
-        ['id11']);
+        [1, 1, MovieInfo(imdbId: 'externalId1')]);
+    expect(
+        verify(programTvDataSource.deleteProgram(captureAny)).captured, [11]);
     expect(verify(programLocalDataSource.deletePrograms(captureAny)).captured, [
       [
         Program(
-          id: 'id11',
+          id: 11,
           externalId: 'externalId11',
           channelExternalId: ChannelsService.moviesChannelId,
           isDeleted: false,
         )
       ]
     ]);
+    expect(
+        verify(programLocalDataSource.setProgramDeleted(captureAny)).captured,
+        [Program(
+          id: 222,
+          externalId: 'externalId222',
+          channelExternalId: ChannelsService.moviesChannelId,
+          isDeleted: true,
+        )]);
   });
 
   test('update !isBrowsable', () async {
     final programTvDataSource = MockProgramTvDataSource();
     final programLocalDataSource = MockProgramLocalDataSource();
     final channelsService =
-      ChannelsService(programLocalDataSource, programTvDataSource);
+        ChannelsService(programLocalDataSource, programTvDataSource);
 
     when(programTvDataSource.getChannels()).thenAnswer((_) async => [
-      Channel(
-        id: 'channelId',
-        isDefault: true,
-        externalId: ChannelsService.moviesChannelId,
-        title: 'movies',
-        logoUri: 'movies_channel_logo',
-        isBrowsable: false,
-      ),
-    ]);
+          Channel(
+            id: 1,
+            isDefault: true,
+            externalId: ChannelsService.moviesChannelId,
+            title: 'movies',
+            logoUri: 'movies_channel_logo',
+            isBrowsable: false,
+          ),
+        ]);
     await channelsService.update([]);
 
     verify(programTvDataSource.getChannels());

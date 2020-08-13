@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 
 import '../data_sources.dart';
@@ -29,7 +27,7 @@ class ParseDataSource implements RemoteDataSource {
   }
 
   @override
-  Future<Map<String, dynamic>> getTopSeedersFhdMovies() async {
+  Future<String> getTopSeedersFhdMovies() async {
     final configResults =
         (await dio.get<Map<String, dynamic>>(basePath + configPath))
             .data['results'] as List;
@@ -37,7 +35,7 @@ class ParseDataSource implements RemoteDataSource {
       final config = configResults[0] as Map<String, dynamic>;
       final url = config['topSeedersFhdMovies']['url'] as String;
       final response = await dio.get<String>(url);
-      return json.decode(response.data);
+      return response.data;
     } else {
       return null;
     }

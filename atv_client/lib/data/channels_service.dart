@@ -1,22 +1,8 @@
-import 'package:atv_client/model/channel.dart';
-import 'package:atv_client/model/program.dart';
+import '../model/channel.dart';
+import '../model/program.dart';
 import 'package:domain/domain.dart';
 
-abstract class ProgramLocalDataSource {
-  Future<void> createProgram(Program program);
-  Future<List<Program>> getPrograms();
-  Future<void> deletePrograms(List<Program> programs);
-  Future<void> setProgramDeleted(String id);
-}
-
-abstract class ProgramTvDataSource {
-  Future<String> createProgram(String channelId, MovieInfo movie);
-  Future<void> updateProgram(String channelId, String id, MovieInfo movie);
-  Future<void> deleteProgram(String id);
-  Future<String> createChannel(Channel channel);
-  Future<List<Channel>> getChannels();
-  Future<void> setChannelBrowsable(String id);
-}
+import 'data_sources.dart';
 
 class ChannelsService {
   static const moviesChannelId = 'movies';
@@ -34,11 +20,6 @@ class ChannelsService {
 
   ChannelsService(this._programLocalDataSource, this._programTvDataSource);
 
-  Future<void> userDeleteProgram(String id) async {
-    await _programTvDataSource.deleteProgram(id);
-    await _programLocalDataSource.setProgramDeleted(id);
-  }
-
   Future<List<Channel>> getNotAddedChannels() async {
     final channels = await _programTvDataSource.getChannels();
     if (channels.isEmpty) {
@@ -49,7 +30,7 @@ class ChannelsService {
   }
 
   Future<void> addChannel(Channel channel) async {
-    String id;
+    int id;
     if (channel.id == null) {
       id = await _programTvDataSource.createChannel(channel);
     } else {
@@ -73,8 +54,16 @@ class ChannelsService {
   }
 
   Future<void> _updateMoviesPrograms(
-      String channelId, List<MovieInfo> movies) async {
+      int channelId, List<MovieInfo> movies) async {
     final localPrograms = await _programLocalDataSource.getPrograms();
+    final tvProgramsIds = await _programTvDataSource.getProgramsIds(channelId);
+    localPrograms
+        .where((program) => !tvProgramsIds.contains(program.id))
+        .forEach((program) async {
+      await _programLocalDataSource.setProgramDeleted(program);
+      program.isDeleted = true;
+    });
+
     for (final movie in movies) {
       final program = localPrograms
           .firstWhere((e) => e.externalId == movie.imdbId, orElse: () => null);
@@ -89,6 +78,7 @@ class ChannelsService {
         await _programTvDataSource.updateProgram(channelId, program.id, movie);
       }
     }
+
     final deletedPrograms = localPrograms
         .where((program) =>
             !movies.any((movie) => movie.imdbId == program.externalId))

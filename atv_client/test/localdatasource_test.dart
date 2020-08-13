@@ -57,6 +57,9 @@ void main() {
     await appDb.configsDao.setImageBasePath('imageBasePath');
     var config = await appDb.select(appDb.configs).getSingle();
     expect(config.imageBasePath, 'imageBasePath');
+    expect(config.moviesInfo, isNull);
+    expect(config.updating, isNull);
+    expect(config.id, 1);
 
     await appDb.configsDao.setImageBasePath('imageBasePath1');
     config = await appDb.select(appDb.configs).getSingle();
@@ -77,9 +80,12 @@ void main() {
         ),
       ]
     };
-    await appDb.configsDao.setTopSeedersFhdMovies(movies);
+    await appDb.configsDao.setTopSeedersFhdMovies(json.encode(movies));
     var config = await appDb.select(appDb.configs).getSingle();
     expect(config.moviesInfo, json.encode(movies));
+    expect(config.imageBasePath, isNull);
+    expect(config.updating, isNull);
+    expect(config.id, 1);
 
     movies = {
       'results': [
@@ -94,8 +100,31 @@ void main() {
         ),
       ]
     };
-    await appDb.configsDao.setTopSeedersFhdMovies(movies);
+    await appDb.configsDao.setTopSeedersFhdMovies(json.encode(movies));
     config = await appDb.select(appDb.configs).getSingle();
     expect(config.moviesInfo, json.encode(movies));
+  });
+
+  test('getUpdating', () async {
+    expect(await appDb.configsDao.getUpdating(), isNull);
+    appDb.into(appDb.configs).insert(db.ConfigsCompanion.insert(
+      id: moor.Value(1),
+      updating: moor.Value(true),
+    ));
+    final updating = await appDb.configsDao.getUpdating();
+    expect(updating, true);
+  });
+
+  test('setUpdating', () async {
+    await appDb.configsDao.setUpdating(true);
+    var config = await appDb.select(appDb.configs).getSingle();
+    expect(config.updating, true);
+    expect(config.imageBasePath, isNull);
+    expect(config.moviesInfo, isNull);
+    expect(config.id, 1);
+
+    await appDb.configsDao.setUpdating(false);
+    config = await appDb.select(appDb.configs).getSingle();
+    expect(config.updating, false);
   });
 }

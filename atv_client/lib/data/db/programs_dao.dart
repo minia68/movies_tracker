@@ -1,8 +1,8 @@
 import 'package:moor/moor.dart';
 
-import '../cnannels_service.dart';
+import '../data_sources.dart';
 import 'app_db.dart';
-import 'package:atv_client/model/program.dart' as model;
+import '../../model/program.dart' as model;
 
 part 'programs_dao.g.dart';
 
@@ -15,25 +15,31 @@ class ProgramsDao extends DatabaseAccessor<AppDb>
   @override
   Future<void> createProgram(model.Program program) {
     return into(programs).insert(ProgramsCompanion.insert(
-      id: program.id,
-      externalId: Value(program.externalId),
-      channelExternalId: Value(program.channelExternalId),
+      programId: program.id,
+      externalId: program.externalId,
+      channelExternalId: program.channelExternalId,
       isDeleted: Value(program.isDeleted),
     ));
   }
 
   @override
   Future<void> deletePrograms(List<model.Program> programsToDelete) {
-    return (delete(programs)
-          ..where((tbl) => tbl.id.isIn(programsToDelete.map((e) => e.id))))
-        .go();
+    return batch((b) {
+      for (final program in programsToDelete) {
+        b.deleteWhere(
+            programs,
+            (Programs tbl) =>
+                tbl.programId.equals(program.id) &
+                tbl.channelExternalId.equals(program.channelExternalId));
+      }
+    });
   }
 
   @override
   Future<List<model.Program>> getPrograms() async {
     return (await select(programs).get())
         .map((e) => model.Program(
-              id: e.id,
+              id: e.programId,
               externalId: e.externalId,
               channelExternalId: e.channelExternalId,
               isDeleted: e.isDeleted,
@@ -42,8 +48,11 @@ class ProgramsDao extends DatabaseAccessor<AppDb>
   }
 
   @override
-  Future<void> setProgramDeleted(String id) {
-    return (update(programs)..where((tbl) => tbl.id.equals(id)))
+  Future<void> setProgramDeleted(model.Program program) {
+    return (update(programs)
+          ..where((tbl) =>
+              tbl.programId.equals(program.id) &
+              tbl.channelExternalId.equals(program.channelExternalId)))
         .write(ProgramsCompanion(isDeleted: Value(true)));
   }
 }

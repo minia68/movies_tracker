@@ -1,8 +1,8 @@
 class Program {
-  final String id;
+  final int id;
   final String externalId;
   final String channelExternalId;
-  final bool isDeleted;
+  bool isDeleted;
 
   Program({
     this.id,
@@ -27,4 +27,9 @@ class Program {
       externalId.hashCode ^
       channelExternalId.hashCode ^
       isDeleted.hashCode;
+
+  @override
+  String toString() {
+    return 'Program{id: $id, externalId: $externalId, channelExternalId: $channelExternalId, isDeleted: $isDeleted}';
+  }
 }

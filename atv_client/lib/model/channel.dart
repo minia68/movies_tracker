@@ -1,5 +1,5 @@
 class Channel {
-  final String id;
+  final int id;
   final String externalId;
   final String title;
   final String logoUri;

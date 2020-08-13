@@ -15,7 +15,7 @@ void main() {
   });
 
   void _testModelDb(db.Program actual, Program expected) {
-    expect(actual.id, expected.id);
+    expect(actual.programId, expected.id);
     expect(actual.externalId, expected.externalId);
     expect(actual.channelExternalId, expected.channelExternalId);
     expect(actual.isDeleted, expected.isDeleted);
@@ -23,7 +23,7 @@ void main() {
 
   test('createProgram', () async {
     final program = Program(
-      id: 'id',
+      id: 1,
       externalId: 'externalId',
       channelExternalId: 'channelExternalId',
       isDeleted: false,
@@ -31,25 +31,35 @@ void main() {
     await appDb.programsDao.createProgram(program);
 
     final actual = await (appDb.select(appDb.programs)
-          ..where((tbl) => tbl.id.equals('id')))
+          ..where((tbl) => tbl.programId.equals(1)))
         .getSingle();
     _testModelDb(actual, program);
   });
 
   test('deletePrograms', () async {
     final programs = [
-      Program(id: 'id1'),
-      Program(id: 'id2'),
-      Program(id: 'id3')
+      Program(id: 1, channelExternalId: '1', externalId: '1'),
+      Program(id: 2, channelExternalId: '1', externalId: '1'),
+      Program(id: 3, channelExternalId: '1', externalId: '1'),
     ];
     appDb.into(appDb.programs).insert(db.ProgramsCompanion.insert(
-          id: programs[0].id,
+          programId: programs[0].id,
+          channelExternalId: '1',
+          externalId: '1',
           isDeleted: Value(false),
         ));
     appDb.into(appDb.programs).insert(db.ProgramsCompanion.insert(
-        id: programs[1].id, isDeleted: Value(false)));
+          programId: programs[1].id,
+          channelExternalId: '1',
+          externalId: '1',
+          isDeleted: Value(false),
+        ));
     appDb.into(appDb.programs).insert(db.ProgramsCompanion.insert(
-        id: programs[2].id, isDeleted: Value(false)));
+          programId: programs[2].id,
+          channelExternalId: '1',
+          externalId: '1',
+          isDeleted: Value(false),
+        ));
 
     await appDb.programsDao.deletePrograms([programs[0], programs[2]]);
 
@@ -61,27 +71,27 @@ void main() {
   test('getPrograms', () async {
     final programs = [
       Program(
-        id: 'id1',
+        id: 1,
         externalId: 'externalId1',
         isDeleted: false,
         channelExternalId: 'channelExternalId1',
       ),
       Program(
-          id: 'id2',
+          id: 2,
           externalId: 'externalId2',
           isDeleted: true,
           channelExternalId: 'channelExternalId2'),
     ];
     appDb.into(appDb.programs).insert(db.ProgramsCompanion.insert(
-          id: programs[0].id,
-          externalId: Value(programs[0].externalId),
-          channelExternalId: Value(programs[0].channelExternalId),
+          programId: programs[0].id,
+          externalId: programs[0].externalId,
+          channelExternalId: programs[0].channelExternalId,
           isDeleted: Value(programs[0].isDeleted),
         ));
     appDb.into(appDb.programs).insert(db.ProgramsCompanion.insert(
-          id: programs[1].id,
-          externalId: Value(programs[1].externalId),
-          channelExternalId: Value(programs[1].channelExternalId),
+          programId: programs[1].id,
+          externalId: programs[1].externalId,
+          channelExternalId: programs[1].channelExternalId,
           isDeleted: Value(programs[1].isDeleted),
         ));
 
@@ -91,24 +101,24 @@ void main() {
 
   test('setProgramDeleted', () async {
     final program = Program(
-      id: 'id',
+      id: 1,
       externalId: 'externalId',
       channelExternalId: 'channelExternalId',
       isDeleted: false,
     );
     appDb.into(appDb.programs).insert(db.ProgramsCompanion.insert(
-          id: program.id,
-          externalId: Value(program.externalId),
-          channelExternalId: Value(program.channelExternalId),
+          programId: program.id,
+          externalId: program.externalId,
+          channelExternalId: program.channelExternalId,
           isDeleted: Value(program.isDeleted),
         ));
 
-    await appDb.programsDao.setProgramDeleted(program.id);
+    await appDb.programsDao.setProgramDeleted(program);
 
     final actual = await (appDb.select(appDb.programs)
-          ..where((tbl) => tbl.id.equals(program.id)))
+          ..where((tbl) => tbl.programId.equals(program.id)))
         .getSingle();
-    expect(actual.id, program.id);
+    expect(actual.programId, program.id);
     expect(actual.isDeleted, true);
   });
 }

@@ -1,11 +1,14 @@
 CREATE TABLE programs (
-    id TEXT NOT NULL PRIMARY KEY,
-    externalId TEXT,
-    channelExternalId TEXT,
-    isDeleted BOOLEAN
+    programId INT NOT NULL,
+    externalId TEXT NOT NULL,
+    channelExternalId TEXT NOT NULL,
+    isDeleted BOOLEAN,
+    PRIMARY KEY (programId, channelExternalId)
 );
+
 CREATE TABLE configs (
     id INT NOT NULL PRIMARY KEY,
     moviesInfo TEXT,
-    imageBasePath TEXT
+    imageBasePath TEXT,
+    updating BOOLEAN
 );
