@@ -18,6 +18,8 @@ dependencies:
     path: ../domain
   movie_info_provider:
     path: ../movie_info_provider
+  atv_channels:
+    path: ../atv_channels
 
   rxdart: ^0.24.1
   url_launcher: ^5.5.0
