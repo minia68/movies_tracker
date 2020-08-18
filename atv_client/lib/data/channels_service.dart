@@ -88,4 +88,8 @@ class ChannelsService {
     }
     await _programLocalDataSource.deletePrograms(deletedPrograms);
   }
+
+  void setImageBasePath(String imageBasePath) {
+    _programTvDataSource.setImageBasePath(imageBasePath);
+  }
 }

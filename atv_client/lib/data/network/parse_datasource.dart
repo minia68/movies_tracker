@@ -6,7 +6,6 @@ class ParseDataSource implements RemoteDataSource {
   final Dio dio;
   final String basePath;
   final String configPath = 'classes/config';
-  final String filePath = 'files';
 
   ParseDataSource(this.dio, {String basePath = ''})
       : basePath = basePath == null || basePath.isEmpty

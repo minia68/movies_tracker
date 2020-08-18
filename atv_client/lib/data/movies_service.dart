@@ -32,15 +32,22 @@ class MoviesService {
   Future<void> update() async {
     await _localDataSource.setUpdating(true);
     try {
+      final imageBasePath = await _remoteDataSource.getImageBasePath();
       await _localDataSource
-          .setImageBasePath(await _remoteDataSource.getImageBasePath());
+          .setImageBasePath(imageBasePath);
       await _localDataSource.setTopSeedersFhdMovies(
           await _remoteDataSource.getTopSeedersFhdMovies());
+
+      _channelsService.setImageBasePath(imageBasePath);
       await _channelsService
           .update(await _localDataSource.getTopSeedersFhdMovies());
     } finally {
       await _localDataSource.setUpdating(false);
     }
+  }
+
+  Future<bool> isUpdating() {
+    return _localDataSource.getUpdating();
   }
 
   Future<Config> _getConfig(bool updating) async {

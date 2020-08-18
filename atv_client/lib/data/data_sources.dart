@@ -29,4 +29,5 @@ abstract class ProgramTvDataSource {
   Future<List<Channel>> getChannels();
   Future<void> setChannelBrowsable(int id);
   Future<List<int>> getProgramsIds(int channelId);
+  void setImageBasePath(String imageBasePath);
 }
