@@ -75,7 +75,7 @@ class AtvProgramDataSource implements ProgramTvDataSource {
       ..reviewRating = (movie.raiting.imdbVoteAverage * 0.5).toString()
       ..posterArtAspectRatio = api.PreviewPrograms.ASPECT_RATIO_2_3
       ..description = movie.overview
-      ..posterArtUri = '$_imageBasePath${movie.posterPath}'
+      ..posterArtUri = '${_imageBasePath}w300${movie.posterPath}'
       ..releaseDate = '${movie.releaseDate.year}-'
           '${movie.releaseDate.month < 10 ? '0${movie.releaseDate.month}' : movie.releaseDate.month.toString()}-'
           '${movie.releaseDate.day < 10 ? '0${movie.releaseDate.day}' : movie.releaseDate.day.toString()}';
