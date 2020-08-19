@@ -1,3 +1,4 @@
+import 'package:atv_channels/atv_channels.dart' as atv_channels;
 import 'package:domain/domain.dart';
 import '../model/channel.dart';
 import '../model/program.dart';
@@ -30,4 +31,5 @@ abstract class ProgramTvDataSource {
   Future<void> setChannelBrowsable(int id);
   Future<List<int>> getProgramsIds(int channelId);
   void setImageBasePath(String imageBasePath);
+  Future<atv_channels.GetInitialDataResponse> getInitialData();
 }

@@ -1,3 +1,5 @@
+import 'package:atv_channels/atv_channels.dart';
+
 import '../../data/movies_service.dart';
 import '../../model/config.dart';
 import 'package:domain/domain.dart';
@@ -11,43 +13,33 @@ class TorrentsListBloc {
 
   final _filterSubject =
       BehaviorSubject<TorrentsListSort>.seeded(TorrentsListSort.seeders);
-  final _naveganteMovieDetail = PublishSubject<TorrentsListItem>();
-  final _focusedIndex = BehaviorSubject<int>.seeded(0);
 
-  TorrentsListBloc(this._moviesService);
+  TorrentsListBloc(this._moviesService) {
+    moviesList = Rx.combineLatest2(
+      _filterSubject.stream,
+      _moviesService.getMovies().where((event) => !event.isUpdating),
+      (TorrentsListSort filter, Config config) =>
+          config.movies.map((movieInfo) {
+        movieInfo.torrentsInfo.sort((a, b) => b.seeders.compareTo(a.seeders));
+        return TorrentsListItem(movieInfo, config.imageBasePath);
+      }).toList()
+            ..sort(_getSortFunc(filter)),
+    ).shareValue();
+  }
 
-  Stream<List<TorrentsListItem>> get moviesList => Rx.combineLatest2(
-        _filterSubject.stream,
-        _moviesService.getMovies().where((event) => !event.isUpdating),
-        (TorrentsListSort filter, Config config) =>
-            config.movies.map((movieInfo) {
-          movieInfo.torrentsInfo.sort((a, b) => b.seeders.compareTo(a.seeders));
-          return TorrentsListItem(movieInfo, config.imageBasePath);
-        }).toList()
-              ..sort(_getSortFunc(filter)),
-      );
+  ValueStream<List<TorrentsListItem>> moviesList;
 
-  Stream<TorrentsListItem> get naveganteMovieDetail =>
-      _naveganteMovieDetail.stream;
 
-  Stream<int> get focusedIndex => _focusedIndex.stream;
+  Future<GetInitialDataResponse> getInitialData() {
+    return _moviesService.channelsService.getInitialData();
+  }
 
   void sort(TorrentsListSort type) {
     _filterSubject.add(type);
   }
 
-  void onMovieClick(TorrentsListItem clickedItem) {
-    _naveganteMovieDetail.add(clickedItem);
-  }
-
-  void onFocusChange(int index) {
-    _focusedIndex.add(index);
-  }
-
   void dispose() {
-    _naveganteMovieDetail.close();
     _filterSubject.close();
-    _focusedIndex.close();
   }
 
   SortFunc _getSortFunc(TorrentsListSort type) {

@@ -85,4 +85,9 @@ class AtvProgramDataSource implements ProgramTvDataSource {
   void setImageBasePath(String imageBasePath) {
     _imageBasePath = imageBasePath;
   }
+
+  @override
+  Future<api.GetInitialDataResponse> getInitialData() {
+    return _atvChannelsApi.getInitialData();
+  }
 }

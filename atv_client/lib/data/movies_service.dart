@@ -6,10 +6,10 @@ import 'package:rxdart/rxdart.dart';
 class MoviesService {
   final LocalDataSource _localDataSource;
   final RemoteDataSource _remoteDataSource;
-  final ChannelsService _channelsService;
+  final ChannelsService channelsService;
 
   MoviesService(
-      this._localDataSource, this._remoteDataSource, this._channelsService);
+      this._localDataSource, this._remoteDataSource, this.channelsService);
 
   Stream<Config> getMovies() {
     return Stream.fromFuture(_localDataSource.getUpdating())
@@ -38,8 +38,8 @@ class MoviesService {
       await _localDataSource.setTopSeedersFhdMovies(
           await _remoteDataSource.getTopSeedersFhdMovies());
 
-      _channelsService.setImageBasePath(imageBasePath);
-      await _channelsService
+      channelsService.setImageBasePath(imageBasePath);
+      await channelsService
           .update(await _localDataSource.getTopSeedersFhdMovies());
     } finally {
       await _localDataSource.setUpdating(false);
@@ -48,6 +48,10 @@ class MoviesService {
 
   Future<bool> isUpdating() {
     return _localDataSource.getUpdating();
+  }
+
+  Future<void> setUpdating() {
+    return _localDataSource.setUpdating(true);
   }
 
   Future<Config> _getConfig(bool updating) async {

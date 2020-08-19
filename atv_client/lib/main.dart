@@ -1,4 +1,7 @@
 import 'package:atv_channels/atv_channels.dart';
+import 'package:atv_client/presentation/bloc/torrents_list_bloc.dart';
+import 'package:atv_client/presentation/page/torrent_list_page.dart';
+import 'package:flutter/services.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'data/atv/atv_program_datasource.dart';
@@ -17,13 +20,17 @@ MoviesService init() {
       headers: {
         'X-Parse-Application-Id': '4mSOCSStSymWpiNKw0cnP0Fcz1hk6uFwjN5uGYgv',
         'X-Parse-REST-API-Key': 'avelPvw77LNGdxi8gDuxiBKzEHwZLDBr6DvnAt5Y',
-      }));
+      },
+  ));
+  dio.interceptors.add(LogInterceptor(requestBody: true, responseBody: true));
   return MoviesService(
     db.configsDao,
     ParseDataSource(dio),
     ChannelsService(
       db.programsDao,
       AtvProgramDataSource(AtvChannelsApi()),
+      moviesChannelTitle: 'movies',
+      moviesChannelLogoDrawableResourceName: 'movies_channel',
     ),
   );
 }
@@ -50,6 +57,7 @@ void main() async {
   );
   final moviesService = init();
   if (await moviesService.isUpdating() == null) {
+    await moviesService.setUpdating();
     Workmanager.registerPeriodicTask(
       '1',
       'update',
@@ -60,18 +68,25 @@ void main() async {
   runApp(App(moviesService: moviesService));
 }
 
+final _shortcuts = {
+  LogicalKeySet(LogicalKeyboardKey.select): const ActivateIntent()
+};
 class App extends StatelessWidget {
   final MoviesService moviesService;
 
-  const App({Key key, this.moviesService}) : super(key: key);
+  const App({
+    Key key,
+    @required this.moviesService,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    return Shortcuts(
+      shortcuts: _shortcuts,
+      child: MaterialApp(
+        title: 'Movies tracker',
+        theme: ThemeData.dark(),
+        home: TorrentsListPage(bloc: TorrentsListBloc(moviesService)),
       ),
     );
   }

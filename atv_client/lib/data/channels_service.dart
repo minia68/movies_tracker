@@ -1,3 +1,5 @@
+import 'package:atv_channels/atv_channels.dart' as atv_channels;
+
 import '../model/channel.dart';
 import '../model/program.dart';
 import 'package:domain/domain.dart';
@@ -8,17 +10,24 @@ class ChannelsService {
   static const moviesChannelId = 'movies';
   final ProgramLocalDataSource _programLocalDataSource;
   final ProgramTvDataSource _programTvDataSource;
-  final _channels = [
-    Channel(
-      id: null,
-      isDefault: true,
-      externalId: moviesChannelId,
-      title: 'movies',
-      logoUri: 'movies_channel_logo',
-    )
-  ];
+  final moviesChannelTitle;
+  final moviesChannelLogoDrawableResourceName;
+  final _channels;
 
-  ChannelsService(this._programLocalDataSource, this._programTvDataSource);
+  ChannelsService(
+    this._programLocalDataSource,
+    this._programTvDataSource, {
+    this.moviesChannelTitle,
+    this.moviesChannelLogoDrawableResourceName,
+  }) : _channels = [
+          Channel(
+            id: null,
+            isDefault: true,
+            externalId: moviesChannelId,
+            title: moviesChannelTitle ?? 'movies',
+            logoUri: moviesChannelLogoDrawableResourceName ?? 'movies_channel',
+          )
+        ];
 
   Future<List<Channel>> getNotAddedChannels() async {
     final channels = await _programTvDataSource.getChannels();
@@ -53,7 +62,15 @@ class ChannelsService {
     }
   }
 
-  Future<void> _updateMoviesPrograms(
+  void setImageBasePath(String imageBasePath) {
+    _programTvDataSource.setImageBasePath(imageBasePath);
+  }
+
+  Future<atv_channels.GetInitialDataResponse> getInitialData() {
+    return _programTvDataSource.getInitialData();
+  }
+
+  Future<void> _updateMoviesPrograms( // TODO limit to 20, sort
       int channelId, List<MovieInfo> movies) async {
     final localPrograms = await _programLocalDataSource.getPrograms();
     final tvProgramsIds = await _programTvDataSource.getProgramsIds(channelId);
@@ -87,9 +104,5 @@ class ChannelsService {
       await _programTvDataSource.deleteProgram(program.id);
     }
     await _programLocalDataSource.deletePrograms(deletedPrograms);
-  }
-
-  void setImageBasePath(String imageBasePath) {
-    _programTvDataSource.setImageBasePath(imageBasePath);
   }
 }
