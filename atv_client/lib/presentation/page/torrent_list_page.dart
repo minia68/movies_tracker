@@ -42,7 +42,7 @@ class _TorrentsListPageState extends State<TorrentsListPage>
   }
 
   @override
-  void showProgram(ShowRequest arg) { // TODO scroll in WidgetsBinding.instance.addPostFrameCallback((_) => yourFunction(context));
+  void showProgram(ShowRequest arg) {
     print('showChannel ${arg.channelExternalId} ${arg.programExternalId}');
     final idx = widget.bloc.moviesList.value
         ?.indexWhere((e) => e.movieInfo.imdbId == arg.programExternalId);

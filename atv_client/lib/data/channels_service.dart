@@ -70,8 +70,9 @@ class ChannelsService {
     return _programTvDataSource.getInitialData();
   }
 
-  Future<void> _updateMoviesPrograms( // TODO limit to 20, sort
+  Future<void> _updateMoviesPrograms(
       int channelId, List<MovieInfo> movies) async {
+    movies = movies.take(20).toList();
     final localPrograms = await _programLocalDataSource.getPrograms();
     final tvProgramsIds = await _programTvDataSource.getProgramsIds(channelId);
     localPrograms
