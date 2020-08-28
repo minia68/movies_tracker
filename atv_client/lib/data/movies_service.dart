@@ -11,6 +11,10 @@ class MoviesService {
   MoviesService(
       this._localDataSource, this._remoteDataSource, this.channelsService);
 
+  Future<void> close() {
+    return _localDataSource.close();
+  }
+
   Stream<Config> getMovies() {
     return Stream.fromFuture(_localDataSource.getUpdating())
         .flatMap((updating) {
@@ -56,7 +60,6 @@ class MoviesService {
 
   Future<Config> _getConfig(bool updating) async {
     return Config(
-      isUpdating: updating,
       imageBasePath: await _localDataSource.getImageBasePath(),
       movies: await _localDataSource.getTopSeedersFhdMovies(),
     );

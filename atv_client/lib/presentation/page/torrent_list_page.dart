@@ -1,178 +1,127 @@
-import 'dart:async';
-
 import 'package:android_intent/android_intent.dart';
 import 'package:atv_channels/atv_channels.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:rxdart/rxdart.dart';
+import 'package:get/get.dart';
+import 'package:sa_stateless_animation/sa_stateless_animation.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import '../bloc/torrents_list_bloc.dart';
+import '../torrents_list_controller.dart';
 
 class TorrentsListPage extends StatefulWidget {
-  final TorrentsListBloc bloc;
-
-  TorrentsListPage({Key key, @required this.bloc}) : super(key: key);
-
   @override
   _TorrentsListPageState createState() => _TorrentsListPageState();
 }
 
 class _TorrentsListPageState extends State<TorrentsListPage>
-    with TickerProviderStateMixin
-    implements AtvChannelsApiFlutter {
-  BehaviorSubject<LogicalKeyboardKey> keySubject;
-  BehaviorSubject<int> focusedIndexSubject;
-  BehaviorSubject<bool> selectedSubject;
-  StreamSubscription<int> focusedIndexStreamSubscription;
-  StreamSubscription selectedSubjectSubscription;
-  FocusNode focusNode;
-  ItemScrollController scrollController = ItemScrollController();
+    with TickerProviderStateMixin {
   PageStorageKey<String> moviesKey = PageStorageKey<String>('_buildMovies');
-  ScrollController infoController;
-  FocusNode trailerFocusNode;
-
-  @override
-  void showChannel(ShowRequest arg) {
-    print('showChannel ${arg.channelExternalId}');
-    if (selectedSubject.value) {
-      selectedSubject.add(false);
-    }
-  }
-
-  @override
-  void showProgram(ShowRequest arg) {
-    print('showChannel ${arg.channelExternalId} ${arg.programExternalId}');
-    final idx = widget.bloc.moviesList.value
-        ?.indexWhere((e) => e.movieInfo.imdbId == arg.programExternalId);
-    if (idx >= 0) {
-      focusedIndexSubject.add(idx);
-      selectedSubject.add(true);
-    } else {
-      print('idx $idx');
-    }
-  }
+  final TorrentsListController bloc = Get.find();
 
   @override
   void initState() {
+    print('initState');
     super.initState();
-    keySubject = BehaviorSubject<LogicalKeyboardKey>();
-    selectedSubject = BehaviorSubject<bool>();
-    focusedIndexSubject = BehaviorSubject<int>();
-    focusNode = FocusNode();
-    trailerFocusNode = FocusNode();
-    infoController = ScrollController();
-    focusedIndexStreamSubscription = widget.bloc.moviesList
-        .switchMap(_mapKeys)
-        .distinct()
-        .listen((focusedIndex) {
-      print('----------------------- StreamBuilder $focusedIndex');
-      focusedIndexSubject.add(focusedIndex);
-      if (scrollController.isAttached) {
-        scrollController.scrollTo(
-            index: focusedIndex, duration: Duration(milliseconds: 100));
-      }
-    });
-    selectedSubjectSubscription = keySubject
-        .where((e) => e == LogicalKeyboardKey.select)
-        .throttleTime(Duration(milliseconds: 200))
-        .listen((event) => selectedSubject.add(true));
-
-    AtvChannelsApiFlutter.setup(this);
-
-    _checkInitData();
+    AtvChannelsApiFlutter.setup(bloc);
+    bloc.checkInitData();
   }
 
   @override
   void dispose() {
-    focusedIndexStreamSubscription.cancel();
-    selectedSubjectSubscription.cancel();
-    widget.bloc.dispose();
-    focusedIndexSubject.close();
-    selectedSubject.close();
-    keySubject.close();
-    focusNode.dispose();
-    infoController.dispose();
-    trailerFocusNode.dispose();
+    print('dispose');
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    print('build ---------------');
     return WillPopScope(
-      onWillPop: _onWillPop,
+      onWillPop: bloc.onWillPop,
       child: Scaffold(
         backgroundColor: Colors.black,
-//      appBar: AppBar(
-//        //title: Text('qwewq'),
-//        actions: <Widget>[
-//          PopupMenuButton<TorrentsListSort>(
-//            onSelected: widget.bloc.sort,
-//            itemBuilder: (BuildContext context) => _filterListActions(),
-//            icon: Icon(Icons.filter_list),
-//          ),
-//        ],
-//      ),
-        body: StreamBuilder<List<TorrentsListItem>>(
-          stream: widget.bloc.moviesList,
-          builder: (_, snapshot) {
-            if (snapshot.hasError) {
-              return Center(
-                child: Text(
-                  'Error: ${snapshot.error.toString()}',
-                  style: TextStyle(color: Colors.red),
-                ),
-              );
-            }
-            if (snapshot.hasData) {
-              return _buildBody(snapshot.data);
-            } else {
-              return Center(
-                child: SizedBox(
-                  width: 64,
-                  height: 64,
-                  child: CircularProgressIndicator(),
-                ),
-              );
-            }
-          },
-        ),
+        body: Obx(() {
+          print('build --------------- ${bloc.moviesList.value.data == null}');
+          if (bloc.moviesList.value.error != null) {
+            return Center(
+              child: Text(
+                'Error: ${bloc.moviesList.value.error}',
+                style: TextStyle(color: Colors.red),
+              ),
+            );
+          }
+          if (bloc.moviesList.value.data != null) {
+            return _buildMain(bloc.moviesList.value.data);
+          } else {
+            return Center(
+              child: SizedBox(
+                width: 64,
+                height: 64,
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
+        }),
       ),
+    );
+  }
+
+  Widget _buildMain(List<TorrentsListItem> data) {
+    final size = MediaQuery.of(context).size;
+    return Stack(
+      children: [
+        Positioned.fill(
+          right: size.width * 0.7,
+          child: Obx(() => CustomAnimation(
+                duration: Duration(milliseconds: 200),
+                tween: Tween(begin: size.width * -0.3, end: 0.0),
+                builder: (_, child, value) => Transform.translate(
+                  child: child,
+                  offset: Offset(value, 0.0),
+                ),
+                control: _getShowSortAnimationControl(bloc.showSort.value),
+                child: bloc.showSort.value ?? false ? _sortList() : Container(),
+              )),
+        ),
+        Positioned.fill(
+          child: Obx(() => CustomAnimation(
+                duration: Duration(milliseconds: 200),
+                tween: Tween(begin: 0.0, end: size.width * 0.3),
+                builder: (_, child, value) => Transform.translate(
+                  child: child,
+                  offset: Offset(value, 0.0),
+                ),
+                control: _getShowSortAnimationControl(bloc.showSort.value),
+                child: _buildBody(data),
+              )),
+        ),
+      ],
     );
   }
 
   Widget _buildBody(List<TorrentsListItem> data) {
     final size = MediaQuery.of(context).size;
     final backdropImageLeft = size.width * 0.3;
-    final backdropImageBottom = size.height * 0.4;
+    final backdropImageBottom = size.height * 0.3;
     final infoRight = size.width * 0.6;
-    final moviesTop = size.height * 0.4;
-    final torrentsTop = size.height * 0.5;
+    final infoTop = 32.0;
+    final moviesTop = size.height * 0.6;
+    final torrentsTop = size.height * 0.4;
     final torrentsLeft = size.width * 0.4;
     return Stack(
       children: <Widget>[
         Positioned.fill(
           left: backdropImageLeft,
           bottom: backdropImageBottom,
-          child: StreamBuilder<int>(
-            initialData: 0,
-            stream:
-                focusedIndexSubject.debounceTime(Duration(milliseconds: 400)),
-            builder: (_, snapshot) {
-              print('original ${snapshot.data}');
-              if (!snapshot.hasData) {
-                return Container();
-              }
-              final focusedMovieInfo = data[snapshot.data];
-              return CachedNetworkImage(
-                imageUrl: '${focusedMovieInfo.imageBasePath}original'
-                    '${focusedMovieInfo.movieInfo.backdropPath ?? focusedMovieInfo.movieInfo.posterPath}',
-                fit: BoxFit.cover,
-                useOldImageOnUrlChange: true,
-              );
-            },
-          ),
+          child: Obx(() {
+            print('original ${bloc.backdropIndex.value}');
+            final focusedMovieInfo = data[bloc.backdropIndex.value];
+            return CachedNetworkImage(
+              imageUrl: '${focusedMovieInfo.imageBasePath}original'
+                  '${focusedMovieInfo.movieInfo.backdropPath ?? focusedMovieInfo.movieInfo.posterPath}',
+              fit: BoxFit.cover,
+              useOldImageOnUrlChange: true,
+            );
+          }),
         ),
         Positioned.fill(
           left: backdropImageLeft,
@@ -185,46 +134,44 @@ class _TorrentsListPageState extends State<TorrentsListPage>
           child: _buildBackdrop(false),
         ),
         Positioned.fill(
+          top: infoTop,
           right: infoRight,
           child: Padding(
             padding: const EdgeInsets.only(left: 16, top: 16),
-            child: StreamBuilder<int>(
-              initialData: 0,
-              stream: focusedIndexSubject,
-              builder: (_, snapshot) {
-                print('_buildInfo ${snapshot.data}');
-                if (!snapshot.hasData) {
-                  return Container();
-                }
-                return _buildInfo(data[snapshot.data].movieInfo);
-              },
-            ),
+            child: Obx(() {
+              print('_buildInfo ${bloc.focusedIndex.value}');
+              return _buildInfo(data[bloc.focusedIndex.value].movieInfo);
+            }),
           ),
         ),
-        StreamBuilder<bool>(
-          initialData: false,
-          stream: selectedSubject,
-          builder: (_, snapshot) {
-            print('AnimatedPositioned ${snapshot.data}');
-            if (!snapshot.hasData) {
-              return Container();
-            }
-            final selected = snapshot.data;
-            return AnimatedPositioned(
-              duration: const Duration(milliseconds: 200),
-              top: selected ? torrentsTop : moviesTop,
-              bottom: selected ? 0 : 100,
-              left: selected ? torrentsLeft : 0,
-              right: 0,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 400),
-                reverseDuration: const Duration(milliseconds: 200),
-                child: selected
-                    ? _buildTorrents(data[focusedIndexSubject.value].movieInfo)
-                    : _buildMovies(data),
-              ),
-            );
-          },
+        Obx(() {
+          print('AnimatedPositioned ${bloc.selected.value}');
+          final selected = bloc.selected.value;
+          return AnimatedPositioned(
+            duration: const Duration(milliseconds: 200),
+            top: selected ? torrentsTop : moviesTop,
+            bottom: 0,
+            left: selected ? torrentsLeft : 0,
+            right: 0,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              reverseDuration: const Duration(milliseconds: 200),
+              child: selected
+                  ? _buildTorrents(data[bloc.focusedIndex.value].movieInfo)
+                  : _buildMovies(data),
+            ),
+          );
+        }),
+        Positioned(
+          left: 0,
+          top: 0,
+          child: Obx(() => !bloc.selected.value
+              ? IconButton(
+                  focusNode: bloc.sortButtonFocusNode,
+                  icon: Icon(Icons.sort),
+                  onPressed: bloc.onSortButtonPressed,
+                )
+              : Container()),
         ),
       ],
     );
@@ -263,74 +210,66 @@ class _TorrentsListPageState extends State<TorrentsListPage>
           child: AnimatedSize(
             duration: const Duration(milliseconds: 400),
             vsync: this,
-            child: StreamBuilder<bool>(
-              initialData: false,
-              stream: selectedSubject,
-              builder: (_, snapshot) {
-                print('overview ${snapshot.data}');
-                if (!snapshot.hasData) {
-                  return Container();
-                }
-                return FocusScope(
-                  autofocus: false,
-                  canRequestFocus: snapshot.data,
-                  onKey: _onInfoOverviewKey,
-                  child: SingleChildScrollView(
-                    controller: infoController,
-                    child: RawMaterialButton(
-                      onPressed: () {},
-                      child: Text(
-                        movieInfo.overview +
-                            '11111111111111111111111111111111111111111111111111111111111111111111111111111111'
-                                '111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111'
-                                '111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111'
-                                '22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222'
-                                '22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222'
-                                '22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222',
-                        style: TextStyle(fontSize: 16),
-                        overflow: snapshot.data ? null : TextOverflow.ellipsis,
-                        maxLines: snapshot.data ? null : 3,
-                      ),
+            child: Obx(() {
+              print('overview ${bloc.selected.value}');
+              return FocusScope(
+                autofocus: false,
+                canRequestFocus: bloc.selected.value,
+                onKey: bloc.onInfoOverviewKey,
+                child: SingleChildScrollView(
+                  controller: bloc.infoScrollController,
+                  child: RawMaterialButton(
+                    onPressed: () {},
+                    child: Text(
+                      movieInfo.overview, //+
+                      // '11111111111111111111111111111111111111111111111111111111111111111111111111111111'
+                      //     '111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111'
+                      //     '111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111'
+                      //     '22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222'
+                      //     '22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222'
+                      //     '22222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222',
+                      style: TextStyle(fontSize: 16),
+                      overflow:
+                          bloc.selected.value ? null : TextOverflow.ellipsis,
+                      maxLines: bloc.selected.value ? null : 6,
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            }),
           ),
         ),
         Flexible(
           flex: 1,
-          child: StreamBuilder<bool>(
-            initialData: false,
-            stream: selectedSubject,
-            builder: (_, snapshot) {
-              print('Director ${snapshot.data}');
-              if (!snapshot.hasData || !snapshot.data) {
-                return Container();
-              }
-              return Column(
-                children: [
-                  SizedBox(height: 16),
-                  Text(
-                      'Director: ${movieInfo.crew?.firstWhere((e) => e.job == 'Director', orElse: () => null)?.name ?? ''}'),
-                  SizedBox(height: 8),
-                  Text(
-                      'Cast: ${movieInfo.cast?.take(10)?.map((e) => e.name)?.join(', ') ?? ''}'),
-                ],
-              );
-            },
-          ),
+          child: Obx(() {
+            print('Director ${bloc.selected.value}');
+            if (!bloc.selected.value) {
+              return Container();
+            }
+            return Column(
+              children: [
+                SizedBox(height: 16),
+                Text(
+                    'Director: ${movieInfo.crew?.firstWhere((e) => e.job == 'Director', orElse: () => null)?.name ?? ''}'),
+                SizedBox(height: 8),
+                Text(
+                    'Cast: ${movieInfo.cast?.take(10)?.map((e) => e.name)?.join(', ') ?? ''}'),
+              ],
+            );
+          }),
         ),
       ],
     );
   }
 
   Widget _buildMovies(List<TorrentsListItem> data) {
-    return RawKeyboardListener(
-      autofocus: true,
-      focusNode: focusNode,
-      onKey: (key) => keySubject.add(key.logicalKey),
-      child: _buildMoviesList(data),
+    return FocusScope(
+      child: RawKeyboardListener(
+        autofocus: true,
+        focusNode: bloc.moviesFocusNode,
+        onKey: (key) => bloc.onKey(key.logicalKey),
+        child: _buildMoviesList(data),
+      ),
     );
   }
 
@@ -339,7 +278,7 @@ class _TorrentsListPageState extends State<TorrentsListPage>
     const height = 200.0;
     const padding = 16.0;
     return ScrollablePositionedList.builder(
-      itemScrollController: scrollController,
+      itemScrollController: bloc.moviesScrollController,
       key: moviesKey,
       padding: const EdgeInsets.symmetric(horizontal: padding / 2),
       itemCount: data.length,
@@ -352,29 +291,22 @@ class _TorrentsListPageState extends State<TorrentsListPage>
           child: AnimatedSize(
             vsync: this,
             duration: Duration(milliseconds: 200),
-            child: StreamBuilder<int>(
-              initialData: 0,
-              stream: focusedIndexSubject,
-              builder: (_, snapshot) {
-                print('_buildMoviesList ${snapshot.data}');
-                if (!snapshot.hasData) {
-                  return Container();
-                }
-                final focusedIndex = snapshot.data;
-                return Container(
-                  padding: focusedIndex == index
-                      ? const EdgeInsets.all(0)
-                      : const EdgeInsets.symmetric(horizontal: padding / 2),
-                  alignment: Alignment.center,
-                  child: CachedNetworkImage(
-                    imageUrl: movieInfo.imagePath,
-                    fit: BoxFit.cover,
-                    width: focusedIndex == index ? width : width - padding,
-                    height: focusedIndex == index ? height : height - padding,
-                  ),
-                );
-              },
-            ),
+            child: Obx(() {
+              print('_buildMoviesList ${bloc.focusedIndex.value}');
+              final focusedIndex = bloc.focusedIndex.value;
+              return Container(
+                padding: focusedIndex == index
+                    ? const EdgeInsets.all(0)
+                    : const EdgeInsets.symmetric(horizontal: padding / 2),
+                alignment: Alignment.center,
+                child: CachedNetworkImage(
+                  imageUrl: movieInfo.imagePath,
+                  fit: BoxFit.cover,
+                  width: focusedIndex == index ? width : width - padding,
+                  height: focusedIndex == index ? height : height - padding,
+                ),
+              );
+            }),
           ),
         );
       },
@@ -383,7 +315,6 @@ class _TorrentsListPageState extends State<TorrentsListPage>
 
   Widget _buildTorrents(MovieInfo movieInfo) {
     print('_buildTorrents');
-    trailerFocusNode.requestFocus();
     return ListView(
       shrinkWrap: true,
       padding: const EdgeInsets.all(8),
@@ -391,18 +322,20 @@ class _TorrentsListPageState extends State<TorrentsListPage>
         context: context,
         tiles: [
           RaisedButton(
-            focusNode: trailerFocusNode,
+            autofocus: true,
+            focusNode: bloc.trailerFocusNode,
             onPressed: () => _openYoutube(movieInfo.youtubeTrailerKey),
             child: Text('Trailer'),
           ),
           ...(movieInfo.torrentsInfo
-                ..addAll([
-                  ...movieInfo.torrentsInfo,
-                  ...movieInfo.torrentsInfo,
-                  ...movieInfo.torrentsInfo,
-                  ...movieInfo.torrentsInfo,
-                  ...movieInfo.torrentsInfo,
-                ]))
+              // ..addAll([
+              //   ...movieInfo.torrentsInfo,
+              //   ...movieInfo.torrentsInfo,
+              //   ...movieInfo.torrentsInfo,
+              //   ...movieInfo.torrentsInfo,
+              //   ...movieInfo.torrentsInfo,
+              // ])
+              )
               .map((data) => RawMaterialButton(
                     onPressed: () => _openTorrent(data.magnetUrl),
                     child: ListTile(
@@ -433,11 +366,11 @@ class _TorrentsListPageState extends State<TorrentsListPage>
       await intent.launch();
     } catch (_, s) {
       print('=-=-=-=-=-=-=-=-=-=-=');
-      print(s);
+      print(s); //TODO show snackbar
     }
   }
 
-  void _openTorrent(String magnetUrl) {}
+  void _openTorrent(String magnetUrl) {} //TODO open torrent
 
   Widget _ratingRow(double mainSpacing, double imageSize,
       double secondarySpacing, double fontSize, MovieInfo movieInfo) {
@@ -486,54 +419,51 @@ class _TorrentsListPageState extends State<TorrentsListPage>
     ];
   }
 
-  Future<bool> _onWillPop() async {
-    if (selectedSubject?.value ?? false) {
-      selectedSubject.add(false);
-      trailerFocusNode?.unfocus();
-      return false;
-    }
-    return true;
+  Widget _sortList() {
+    return FocusScope(
+      node: bloc.sortListFocusNode,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text('Sort by:'),
+          ),
+          Expanded(
+            child: ListView(
+              children: [
+                _sortListItem(TorrentsListSort.kinopoisk, 'kinopoisk'),
+                _sortListItem(TorrentsListSort.imdb, 'imdb'),
+                _sortListItem(TorrentsListSort.tmdb, 'tmdb'),
+                _sortListItem(TorrentsListSort.seeders, 'seeders'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  Stream<int> _mapKeys(List<TorrentsListItem> data) {
-    return keySubject
-        .where((e) =>
-            e == LogicalKeyboardKey.arrowLeft ||
-            e == LogicalKeyboardKey.arrowRight)
-        .throttleTime(Duration(milliseconds: 200))
-        .scan((acc, value, _) {
-      if ((value == LogicalKeyboardKey.arrowLeft && acc > 0) ||
-          (value == LogicalKeyboardKey.arrowRight && acc < data.length - 1)) {
-        return value == LogicalKeyboardKey.arrowLeft ? acc - 1 : acc + 1;
-      }
-      return acc;
-    }, 0);
+  Widget _sortListItem(TorrentsListSort sortType, String title) {
+    final current = bloc.filter.value == sortType;
+    return RawMaterialButton(
+      autofocus: current,
+      onPressed: () => bloc.onSort(sortType),
+      child: Text(
+        title,
+        style: TextStyle(color: current ? Theme.of(context).accentColor : null),
+      ),
+    );
   }
 
-  bool _onInfoOverviewKey(FocusNode node, RawKeyEvent event) {
-    if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-      infoController.jumpTo(infoController.offset - 20);
-    } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-      infoController.jumpTo(infoController.offset + 20);
-    } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-      trailerFocusNode.focusInDirection(TraversalDirection.down);
-    }
-    return false;
-  }
-
-  Future<void> _checkInitData() async {
-    final result = await widget.bloc.getInitialData();
-    if (result.channelExternalId != null) {
-      if (result.programExternalId != null) {
-        showProgram(ShowRequest()
-          ..programExternalId = result.programExternalId
-          ..channelExternalId = result.channelExternalId);
-      } else {
-        showChannel(
-            ShowRequest()..channelExternalId = result.channelExternalId);
-      }
-    } else {
-      print('result.channelExternalId == null');
+  CustomAnimationControl _getShowSortAnimationControl(bool showSort) {
+    switch (showSort) {
+      case true:
+        return CustomAnimationControl.PLAY_FROM_START;
+      case false:
+        return CustomAnimationControl.PLAY_REVERSE_FROM_END;
+      default:
+        return CustomAnimationControl.STOP;
     }
   }
 }

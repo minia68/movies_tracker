@@ -8,6 +8,7 @@ abstract class LocalDataSource implements Repository {
   Future<void> setImageBasePath(String imageBasePath);
   Future<void> setUpdating(bool updating);
   Future<bool> getUpdating();
+  Future<void> close();
 }
 
 abstract class RemoteDataSource {

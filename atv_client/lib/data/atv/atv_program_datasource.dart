@@ -67,6 +67,7 @@ class AtvProgramDataSource implements ProgramTvDataSource {
   api.CreateProgramRequest _createProgramRequest(
       int channelId, int id, MovieInfo movie) {
     return api.CreateProgramRequest()
+      ..programId = id
       ..externalId = movie.imdbId
       ..title = movie.title
       ..channelId = channelId

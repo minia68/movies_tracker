@@ -16,16 +16,16 @@ class ConfigsDao extends DatabaseAccessor<AppDb>
 
   @override
   Future<String> getImageBasePath() async {
-    return await select(configs)
-        .addColumns([configs.imageBasePath])
+    return await (selectOnly(configs)
+        ..addColumns([configs.imageBasePath]))
         .map((row) => row.read(configs.imageBasePath))
         .getSingle();
   }
 
   @override
   Future<List<MovieInfo>> getTopSeedersFhdMovies() async {
-    final jsonData = await select(configs)
-        .addColumns([configs.moviesInfo])
+    final jsonData = await (selectOnly(configs)
+        ..addColumns([configs.moviesInfo]))
         .map((row) => row.read(configs.moviesInfo))
         .getSingle();
     if (jsonData == null) {
@@ -55,8 +55,8 @@ class ConfigsDao extends DatabaseAccessor<AppDb>
 
   @override
   Future<bool> getUpdating() {
-    return select(configs)
-        .addColumns([configs.updating])
+    return (selectOnly(configs)
+        ..addColumns([configs.updating]))
         .map((row) => row.read(configs.updating))
         .getSingle();
   }
@@ -67,5 +67,10 @@ class ConfigsDao extends DatabaseAccessor<AppDb>
       id: Value(1),
       updating: Value(updating),
     ));
+  }
+
+  @override
+  Future<void> close() {
+    return db.close();
   }
 }

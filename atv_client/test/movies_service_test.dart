@@ -17,7 +17,7 @@ void main() {
     when(localDataSource.getUpdating()).thenAnswer((_) async => false);
 
     expect(moviesService.getMovies(), emitsInOrder([
-      Config(imageBasePath: null, movies: null, isUpdating: false),
+      Config(imageBasePath: null, movies: null),
       emitsDone,
     ]));
     verify(localDataSource.getUpdating()).called(1);
@@ -39,7 +39,7 @@ void main() {
     });
 
     await expectLater(moviesService.getMovies(), emitsInOrder([
-      Config(imageBasePath: null, movies: null, isUpdating: false),
+      Config(imageBasePath: null, movies: null),
       emitsDone,
     ]));
     expect(count, 3);

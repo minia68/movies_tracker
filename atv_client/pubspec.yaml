@@ -21,11 +21,13 @@ dependencies:
   atv_channels:
     path: ../atv_channels
 
+  get: ^3.5.1
   rxdart: ^0.24.1
   url_launcher: ^5.5.0
   cached_network_image: ^2.2.0+1
   android_intent: ^0.3.7+2
   scrollable_positioned_list: ^0.1.7
+  sa_stateless_animation: ^1.0.1
 
   moor: ^3.3.1
   sqlite3_flutter_libs: ^0.2.0

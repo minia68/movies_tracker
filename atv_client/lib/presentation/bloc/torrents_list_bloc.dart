@@ -17,7 +17,7 @@ class TorrentsListBloc {
   TorrentsListBloc(this._moviesService) {
     moviesList = Rx.combineLatest2(
       _filterSubject.stream,
-      _moviesService.getMovies().where((event) => !event.isUpdating),
+      _moviesService.getMovies(),
       (TorrentsListSort filter, Config config) =>
           config.movies.map((movieInfo) {
         movieInfo.torrentsInfo.sort((a, b) => b.seeders.compareTo(a.seeders));
