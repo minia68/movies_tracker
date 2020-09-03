@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:rxdart/rxdart.dart' as rx;
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
-import 'package:workmanager/workmanager.dart';
 import '../model/config.dart';
 import '../data/movies_service.dart';
 

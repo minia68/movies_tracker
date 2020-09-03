@@ -1,5 +1,6 @@
 import 'package:android_intent/android_intent.dart';
 import 'package:atv_channels/atv_channels.dart';
+import 'package:atv_client/presentation/search/search_page.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:domain/domain.dart';
 import 'package:flutter/material.dart';
@@ -165,13 +166,25 @@ class _TorrentsListPageState extends State<TorrentsListPage>
         Positioned(
           left: 0,
           top: 0,
-          child: Obx(() => !bloc.selected.value
-              ? IconButton(
-                  focusNode: bloc.sortButtonFocusNode,
-                  icon: Icon(Icons.sort),
-                  onPressed: bloc.onSortButtonPressed,
-                )
-              : Container()),
+          child:
+              Obx(() => !bloc.selected.value ? _buildActions() : Container()),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActions() {
+    return Row(
+      children: [
+        IconButton(
+          focusNode: bloc.sortButtonFocusNode,
+          icon: Icon(Icons.sort),
+          onPressed: bloc.onSortButtonPressed,
+        ),
+        IconButton(
+          icon: Icon(Icons.search),
+          onPressed: () => Navigator.of(context)
+              .push(MaterialPageRoute(builder: (_) => SearchPage())),
         ),
       ],
     );

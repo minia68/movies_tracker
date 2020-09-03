@@ -1,3 +1,6 @@
+import 'package:domain/domain.dart';
+import 'package:movie_info_provider/movie_info_provider.dart';
+
 import 'channels_service.dart';
 import 'data_sources.dart';
 import '../model/config.dart';
@@ -7,9 +10,28 @@ class MoviesService {
   final LocalDataSource _localDataSource;
   final RemoteDataSource _remoteDataSource;
   final ChannelsService channelsService;
+  final RutorTrackerDataSource _rutorTrackerDataSource;
 
   MoviesService(
-      this._localDataSource, this._remoteDataSource, this.channelsService);
+    this._localDataSource,
+    this._remoteDataSource,
+    this.channelsService,
+    this._rutorTrackerDataSource,
+  );
+
+  Future<List<MovieTorrentInfo>> searchTorrents(String search) async {
+    final result = await _rutorTrackerDataSource
+        .search('/search/0/1/300/2/$search BDRemux|BDRip|(WEB DL) 1080p|1080i');
+    return result
+        .map((e) => MovieTorrentInfo(
+              magnetUrl: e.magnetUrl,
+              title: e.title,
+              leechers: e.leechers,
+              seeders: e.seeders,
+              size: e.size,
+            ))
+        .toList();
+  }
 
   Future<void> close() {
     return _localDataSource.close();
@@ -37,8 +59,7 @@ class MoviesService {
     await _localDataSource.setUpdating(true);
     try {
       final imageBasePath = await _remoteDataSource.getImageBasePath();
-      await _localDataSource
-          .setImageBasePath(imageBasePath);
+      await _localDataSource.setImageBasePath(imageBasePath);
       await _localDataSource.setTopSeedersFhdMovies(
           await _remoteDataSource.getTopSeedersFhdMovies());
 

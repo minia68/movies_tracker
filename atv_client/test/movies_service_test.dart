@@ -11,6 +11,7 @@ void main() {
       localDataSource,
       null,
       null,
+      null,
     );
     when(localDataSource.getTopSeedersFhdMovies()).thenAnswer((_) async => null);
     when(localDataSource.getImageBasePath()).thenAnswer((_) async => null);
@@ -27,6 +28,7 @@ void main() {
     final localDataSource = MockLocalDataSource();
     final moviesService = MoviesService(
       localDataSource,
+      null,
       null,
       null,
     );

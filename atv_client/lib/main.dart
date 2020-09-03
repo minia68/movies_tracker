@@ -1,6 +1,8 @@
 import 'package:atv_channels/atv_channels.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:logging/logging.dart';
+import 'package:movie_info_provider/movie_info_provider.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
@@ -11,6 +13,7 @@ import 'data/movies_service.dart';
 import 'data/db/app_db.dart';
 import 'data/network/parse_datasource.dart';
 import 'presentation/page/torrent_list_page.dart';
+import 'presentation/search/search_controller.dart';
 import 'presentation/torrents_list_controller.dart';
 
 MoviesService init() {
@@ -33,6 +36,10 @@ MoviesService init() {
       moviesChannelTitle: 'movies',
       moviesChannelLogoDrawableResourceName: 'movies_channel',
     ),
+    RutorTrackerDataSource(
+      ProxyDioHtmlPageProvider(),
+      'http://rutor.info',
+    ),
   );
 }
 
@@ -51,6 +58,10 @@ void callbackDispatcher() {
 }
 
 void main() async {
+  Logger.root.level = Level.ALL;
+  Logger.root.onRecord.listen((record) {
+    print('${record.level.name}: ${record.time}: ${record.message}');
+  });
   WidgetsFlutterBinding.ensureInitialized();
 
   Workmanager.initialize(
@@ -73,7 +84,9 @@ void main() async {
   print('put //////////////////////');
   Get.put<MoviesService>(moviesService, permanent: true);
   Get.lazyPut<TorrentsListController>(
-      () => TorrentsListController(Get.find<MoviesService>()), fenix: true);
+    () => TorrentsListController(Get.find<MoviesService>()),
+    fenix: true,
+  );
   runApp(App());
 }
 
